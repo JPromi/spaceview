@@ -208,7 +208,7 @@ fun RoomScreen(
                             .height(90.dp)
                             .fillMaxWidth()
                     ) {
-                        if (roomStatus?.currentBooking == null) {
+                        if (roomStatus?.currentBooking != null) {
                             // busy
                             Column(
                                 modifier = Modifier
