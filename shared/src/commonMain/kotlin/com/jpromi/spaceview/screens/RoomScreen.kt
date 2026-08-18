@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,7 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -151,7 +155,10 @@ fun RoomScreen(
             }
 
             // Name & Status
-            Column (modifier = Modifier.weight(1f)) {
+            Column (
+                modifier = Modifier.weight(2f),
+                verticalArrangement = Arrangement.Center,
+            ) {
                 Text(
                     text = roomStatus?.room?.name ?: "",
                     modifier = Modifier.padding(bottom = 4.dp),
@@ -162,17 +169,78 @@ fun RoomScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+
+                // status
                 Box(
                     modifier = Modifier
-                        .border(1.dp, Color.Black, shape = RoundedCornerShape(8.dp))
-                        .padding(24.dp)
-                        .height(50.dp)
+                        .border(
+                            width = 1.dp,
+                            color = if (roomStatus?.currentBooking != null) {
+                                AppColor.busyTagBackground
+                            } else {
+                                AppColor.freeTagBackground
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    if (roomStatus?.currentBooking != null) {
+                                        AppColor.busyTagBackground
+                                    } else {
+                                        AppColor.freeTagBackground
+                                    }.copy(alpha = 0.25f),
+                                    Color.Transparent
+                                ),
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .padding(12.dp)
+                        .height(90.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(
-                        text = if (roomStatus?.currentBooking != null) "Belegt" else "Frei",
-                        color = AppColor.textColor,
-                    )
+                    if (roomStatus?.currentBooking == null) {
+                        // busy
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 6.dp)
+                                .fillMaxHeight(),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Belegt",
+                                color = AppColor.textColor,
+                                fontWeight = FontWeight.W700,
+                                fontSize = 32.sp,
+                                lineHeight = 10.sp,
+                            )
+                            // ToDo: Show current termin, remaining minutes,...
+                        }
+
+                    } else {
+                        // free
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 6.dp)
+                                .fillMaxHeight(),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Frei",
+                                color = AppColor.textColor,
+                                fontWeight = FontWeight.W700,
+                                fontSize = 32.sp,
+                                lineHeight = 10.sp,
+                            )
+                            Text(
+                                text = "bis xx:xx", // ToDo: Implement time until free
+                                color = AppColor.textColor,
+                                fontSize = 18.sp,
+                                lineHeight = 18.sp,
+                            )
+                        }
+                    }
+
                 }
             }
 
@@ -236,7 +304,7 @@ fun RoomScreen(
                                         .height(slotHeights[index])
                                         .background(
                                             color = AppColor.slotBackground,
-                                            shape = RoundedCornerShape(8.dp),
+                                            shape = RoundedCornerShape(12.dp),
                                         )
                                         .padding(8.dp),
                                 ) {
