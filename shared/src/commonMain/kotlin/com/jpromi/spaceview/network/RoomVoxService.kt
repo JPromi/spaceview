@@ -1,0 +1,112 @@
+package com.jpromi.spaceview.network
+
+import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.models.Room
+import com.jpromi.spaceview.models.RoomAvailability
+import com.jpromi.spaceview.models.RoomStatus
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
+
+class RoomVoxService(
+    private val appSettings: AppSettings = AppSettings(),
+) {
+    val baseUrl: String
+        get() = appSettings.serverUrl.toHttpBaseUrl() + "/apps/roomvox/api/v1"
+
+    suspend fun getRooms(): ApiResult<List<Room>> = executeRequest { client ->
+        client.get("$baseUrl/rooms") {
+            addAuthorizationHeader()
+        }.body()
+    }
+
+    suspend fun getRoom(roomId: String): ApiResult<Room> {
+        if (roomId.isBlank()) {
+            return ApiResult.InvalidRequest("Bitte zuerst einen Raum auswählen.")
+        }
+
+        return executeRequest { client ->
+            client.get("$baseUrl/rooms/${roomId.trim()}") {
+                addAuthorizationHeader()
+            }.body()
+        }
+    }
+
+    suspend fun getRoomStatus(roomId: String): ApiResult<RoomStatus> {
+        if (roomId.isBlank()) {
+            return ApiResult.InvalidRequest("Bitte zuerst einen Raum auswählen.")
+        }
+
+        return executeRequest { client ->
+            client.get("$baseUrl/rooms/${roomId.trim()}/status") {
+                addAuthorizationHeader()
+            }.body()
+        }
+    }
+
+    suspend fun getRoomAvailability(roomId: String): ApiResult<RoomAvailability> {
+        if (roomId.isBlank()) {
+            return ApiResult.InvalidRequest("Bitte zuerst einen Raum auswählen.")
+        }
+
+        return executeRequest { client ->
+            client.get("$baseUrl/rooms/${roomId.trim()}/availability") {
+                addAuthorizationHeader()
+            }.body()
+        }
+    }
+
+    private suspend fun <T> executeRequest(
+        request: suspend (HttpClient) -> T,
+    ): ApiResult<T> {
+        if (appSettings.serverUrl.isBlank()) {
+            return ApiResult.InvalidRequest("Bitte Server-URL eingeben.")
+        }
+
+        val client = HttpClientFactory.create()
+        return try {
+            ApiResult.Success(request(client))
+        } catch (error: ResponseException) {
+            when (error.response.status) {
+                HttpStatusCode.Unauthorized -> ApiResult.Unauthorized
+                HttpStatusCode.Forbidden -> ApiResult.Forbidden
+                HttpStatusCode.NotFound -> ApiResult.NotFound
+                else -> ApiResult.HttpError(
+                    statusCode = error.response.status.value,
+                    message = error.message ?: error.response.status.description,
+                )
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            ApiResult.NetworkError(error)
+        } finally {
+            client.close()
+        }
+    }
+
+    private fun HttpRequestBuilder.addAuthorizationHeader() {
+        if (appSettings.accessToken.isNotBlank()) {
+            bearerAuth(appSettings.accessToken.trim())
+        }
+    }
+}
+
+fun String.toHttpBaseUrl(): String {
+    val trimmedUrl = trim().trimEnd('/')
+
+    if (trimmedUrl.isBlank()) {
+        return ""
+    }
+
+    if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
+        return trimmedUrl
+    }
+
+    return "https://$trimmedUrl"
+}
