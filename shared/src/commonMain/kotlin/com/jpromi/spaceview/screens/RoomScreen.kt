@@ -133,251 +133,264 @@ fun RoomScreen(
             .background(color = AppColor.background)
             .padding(32.dp)
     ) {
-        Column(
-            modifier = Modifier.weight(4f).fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            // Datetime
-            Column (modifier = Modifier.weight(1f)) {
-                Text(
-                    text = currentTimeText,
-                    modifier = Modifier.padding(bottom = 4.dp),
-                    fontWeight = FontWeight.W500,
-                    fontSize = 50.sp,
-                    color = AppColor.textColor,
-                )
-                Text(
-                    text = currentDateText,
-                    fontWeight = FontWeight.W400,
-                    fontSize = 20.sp,
-                    color = AppColor.textColor,
-                )
-            }
-
-            // Name & Status
-            Column (
-                modifier = Modifier.weight(2f),
-                verticalArrangement = Arrangement.Center,
+        if (isLoadingRoom || isLoadingAvailability) {
+            // loading
+            Box (
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = roomStatus?.room?.name ?: "",
-                    modifier = Modifier.padding(bottom = 4.dp),
-                    fontWeight = FontWeight.W500,
-                    fontSize = 30.sp,
-                    color = AppColor.textColor,
-                )
+                CircularProgressIndicator()
+            }
+        } else {
+            Column(
+                modifier = Modifier.weight(4f).fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                // Datetime
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = currentTimeText,
+                        modifier = Modifier.padding(bottom = 4.dp),
+                        fontWeight = FontWeight.W500,
+                        fontSize = 50.sp,
+                        color = AppColor.textColor,
+                    )
+                    Text(
+                        text = currentDateText,
+                        fontWeight = FontWeight.W400,
+                        fontSize = 20.sp,
+                        color = AppColor.textColor,
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                // Name & Status
+                Column(
+                    modifier = Modifier.weight(2f),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = roomStatus?.room?.name ?: "",
+                        modifier = Modifier.padding(bottom = 4.dp),
+                        fontWeight = FontWeight.W500,
+                        fontSize = 30.sp,
+                        color = AppColor.textColor,
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
 
 
-                // status
+                    // status
+                    Box(
+                        modifier = Modifier
+                            .border(
+                                width = 1.dp,
+                                color = if (roomStatus?.currentBooking != null) {
+                                    AppColor.busyTagBackground
+                                } else {
+                                    AppColor.freeTagBackground
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        if (roomStatus?.currentBooking != null) {
+                                            AppColor.busyTagBackground
+                                        } else {
+                                            AppColor.freeTagBackground
+                                        }.copy(alpha = 0.25f),
+                                        Color.Transparent
+                                    ),
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                            )
+                            .padding(12.dp)
+                            .height(90.dp)
+                            .fillMaxWidth()
+                    ) {
+                        if (roomStatus?.currentBooking == null) {
+                            // busy
+                            Column(
+                                modifier = Modifier
+                                    .padding(start = 6.dp)
+                                    .fillMaxHeight(),
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Belegt",
+                                    color = AppColor.textColor,
+                                    fontWeight = FontWeight.W700,
+                                    fontSize = 32.sp,
+                                    lineHeight = 10.sp,
+                                )
+                                // ToDo: Show current termin, remaining minutes,...
+                            }
+
+                        } else {
+                            // free
+                            Column(
+                                modifier = Modifier
+                                    .padding(start = 6.dp)
+                                    .fillMaxHeight(),
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Frei",
+                                    color = AppColor.textColor,
+                                    fontWeight = FontWeight.W700,
+                                    fontSize = 32.sp,
+                                    lineHeight = 10.sp,
+                                )
+                                Text(
+                                    text = "bis xx:xx", // ToDo: Implement time until free
+                                    color = AppColor.textColor,
+                                    fontSize = 18.sp,
+                                    lineHeight = 18.sp,
+                                )
+                            }
+                        }
+
+                    }
+                }
+
+                // Settings
                 Box(
                     modifier = Modifier
-                        .border(
-                            width = 1.dp,
-                            color = if (roomStatus?.currentBooking != null) {
-                                AppColor.busyTagBackground
-                            } else {
-                                AppColor.freeTagBackground
-                            },
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    if (roomStatus?.currentBooking != null) {
-                                        AppColor.busyTagBackground
-                                    } else {
-                                        AppColor.freeTagBackground
-                                    }.copy(alpha = 0.25f),
-                                    Color.Transparent
-                                ),
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .padding(12.dp)
-                        .height(90.dp)
                         .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.BottomEnd,
                 ) {
-                    if (roomStatus?.currentBooking == null) {
-                        // busy
-                        Column(
-                            modifier = Modifier
-                                .padding(start = 6.dp)
-                                .fillMaxHeight(),
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Belegt",
-                                color = AppColor.textColor,
-                                fontWeight = FontWeight.W700,
-                                fontSize = 32.sp,
-                                lineHeight = 10.sp,
-                            )
-                            // ToDo: Show current termin, remaining minutes,...
+                    Button(
+                        onClick = if (appSettings.adminPin.isNotEmpty()) {
+                            { isAdminPinPopupVisible = true }
+                        } else {
+                            onOpenConfiguration
                         }
-
-                    } else {
-                        // free
-                        Column(
-                            modifier = Modifier
-                                .padding(start = 6.dp)
-                                .fillMaxHeight(),
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Frei",
-                                color = AppColor.textColor,
-                                fontWeight = FontWeight.W700,
-                                fontSize = 32.sp,
-                                lineHeight = 10.sp,
-                            )
-                            Text(
-                                text = "bis xx:xx", // ToDo: Implement time until free
-                                color = AppColor.textColor,
-                                fontSize = 18.sp,
-                                lineHeight = 18.sp,
-                            )
-                        }
-                    }
-
-                }
-            }
-
-            // Settings
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.BottomEnd,
-            ) {
-                Button(
-                    onClick = if (appSettings.adminPin.isNotEmpty()) {
-                        { isAdminPinPopupVisible = true }
-                    } else {
-                        onOpenConfiguration
-                    }
-                ) {
-                    Text("Einstellungen")
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(modifier = Modifier.weight(3f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-
-            // Slots
-            Column (modifier = Modifier.fillMaxHeight().weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (isLoadingAvailability) {
-                    CircularProgressIndicator()
-                } else {
-                    val slots = roomAvailability?.slots.orEmpty().filter { slot ->
-                        timeToMinutes(slot.end) > currentMinuteOfDay
-                    }
-
-                    BoxWithConstraints(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
                     ) {
-                        val spacing = 6.dp
-                        val totalSpacing = spacing * (slots.size - 1).coerceAtLeast(0)
-                        val availableSlotHeight = maxOf(0.dp, maxHeight - totalSpacing)
-                        val durations = slots.map {
-                            getWeightFromTime(it.start, it.end).coerceAtLeast(1L)
-                        }
-                        val slotHeights = calculateSlotHeights(
-                            availableHeight = availableSlotHeight,
-                            durations = durations,
-                            minHeight = 70.dp,
-                        )
+                        Text("Einstellungen")
+                    }
+                }
+            }
 
-                        Column(
-                            modifier = Modifier.verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.spacedBy(spacing),
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(3f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+
+                // Slots
+                Column(
+                    modifier = Modifier.fillMaxHeight().weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    if (isLoadingAvailability) {
+                        CircularProgressIndicator()
+                    } else {
+                        val slots = roomAvailability?.slots.orEmpty().filter { slot ->
+                            timeToMinutes(slot.end) > currentMinuteOfDay
+                        }
+
+                        BoxWithConstraints(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
                         ) {
-                            slots.forEachIndexed { index, slot ->
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(slotHeights[index])
-                                        .background(
-                                            color = AppColor.slotBackground,
-                                            shape = RoundedCornerShape(12.dp),
-                                        )
-                                        .padding(8.dp),
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                            val spacing = 6.dp
+                            val totalSpacing = spacing * (slots.size - 1).coerceAtLeast(0)
+                            val availableSlotHeight = maxOf(0.dp, maxHeight - totalSpacing)
+                            val durations = slots.map {
+                                getWeightFromTime(it.start, it.end).coerceAtLeast(1L)
+                            }
+                            val slotHeights = calculateSlotHeights(
+                                availableHeight = availableSlotHeight,
+                                durations = durations,
+                                minHeight = 70.dp,
+                            )
+
+                            Column(
+                                modifier = Modifier.verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(spacing),
+                            ) {
+                                slots.forEachIndexed { index, slot ->
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(slotHeights[index])
+                                            .background(
+                                                color = AppColor.slotBackground,
+                                                shape = RoundedCornerShape(12.dp),
+                                            )
+                                            .padding(8.dp),
                                     ) {
-                                        // Status
-                                        Box(
-                                            modifier = Modifier
-                                                .background(
-                                                    color = if (slot.status == SlotStatus.busy) {
-                                                        AppColor.busyTagBackground
-                                                    } else {
-                                                        AppColor.freeTagBackground
-                                                    },
-                                                    shape = RoundedCornerShape(6.dp)
-                                                )
-                                                .padding(vertical = 2.dp, horizontal = 6.dp)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
+                                            // Status
+                                            Box(
+                                                modifier = Modifier
+                                                    .background(
+                                                        color = if (slot.status == SlotStatus.busy) {
+                                                            AppColor.busyTagBackground
+                                                        } else {
+                                                            AppColor.freeTagBackground
+                                                        },
+                                                        shape = RoundedCornerShape(6.dp)
+                                                    )
+                                                    .padding(vertical = 2.dp, horizontal = 6.dp)
+                                            ) {
+                                                Text(
+                                                    text = slot.status.toString(),
+                                                    color = if (slot.status == SlotStatus.busy) {
+                                                        AppColor.busyTabTextColor
+                                                    } else {
+                                                        AppColor.freeTabTextColor
+                                                    },
+                                                )
+                                            }
+
+                                            // Time
                                             Text(
-                                                text = slot.status.toString(),
-                                                color = if (slot.status == SlotStatus.busy) {
-                                                    AppColor.busyTabTextColor
-                                                } else {
-                                                    AppColor.freeTabTextColor
-                                                },
+                                                text = "${slot.start} - ${slot.end}",
+                                                color = AppColor.textColor,
                                             )
                                         }
 
-                                        // Time
+
+                                        // Title
                                         Text(
-                                            text = "${slot.start} - ${slot.end}",
+                                            text = if (slot.status == SlotStatus.busy) {
+                                                slot.title ?: "Belegt"
+                                            } else {
+                                                "Frei"
+                                            },
                                             color = AppColor.textColor,
                                         )
                                     }
-
-
-                                    // Title
-                                    Text(
-                                        text = if (slot.status == SlotStatus.busy) {
-                                            slot.title ?: "Belegt"
-                                        } else {
-                                            "Frei"
-                                        },
-                                        color = AppColor.textColor,
-                                    )
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if (appSettings.showAddEvent) {
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.LightGray,
-                        contentColor = Color.Black,
-                        disabledContainerColor = Color.Gray,
-                        disabledContentColor = Color.DarkGray,
-                    ),
-                    onClick = onOpenConfiguration
-                ) {
-                    Text("Neuer Termin")
+                if (appSettings.showAddEvent) {
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.LightGray,
+                            contentColor = Color.Black,
+                            disabledContainerColor = Color.Gray,
+                            disabledContentColor = Color.DarkGray,
+                        ),
+                        onClick = onOpenConfiguration
+                    ) {
+                        Text("Neuer Termin")
+                    }
                 }
-            }
 
+            }
         }
     }
 
