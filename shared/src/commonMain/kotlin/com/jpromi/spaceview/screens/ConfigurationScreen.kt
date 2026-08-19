@@ -1,7 +1,9 @@
 package com.jpromi.spaceview.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,9 +22,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.controllers.FullscreenController
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.RoomVoxService
@@ -172,6 +176,22 @@ fun ConfigurationScreen(
             },
         )
         Text("Show Add Event")
+
+        var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
+
+        if (FullscreenController.isFullscreenSupported()) {
+            Row (verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Switch(
+                    checked = fullscreen,
+                    onCheckedChange = {
+                        fullscreen = it
+                        appSettings.fullscreen = it
+                        FullscreenController.setFullscreen(fullscreen)
+                    }
+                )
+                Text("Fullscreen")
+            }
+        }
 
         // Admin Pin configuration
         var adminPin by remember { mutableStateOf(appSettings.adminPin) }

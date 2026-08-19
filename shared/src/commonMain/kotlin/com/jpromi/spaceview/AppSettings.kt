@@ -42,6 +42,12 @@ class AppSettings(
             settings.putBoolean(KEY_SHOW_ADD_EVENT, value)
         }
 
+    var fullscreen: Boolean
+        get() = settings.getBoolean(KEY_FULLSCREEN, false)
+        set(value) {
+            settings.putBoolean(KEY_FULLSCREEN, value)
+        }
+
     private companion object {
         const val KEY_SERVER_URL = "server_url"
         const val KEY_ACCESS_TOKEN = "access_token"
@@ -49,5 +55,6 @@ class AppSettings(
         const val KEY_SELECTED_ROOM_ID = "selected_room_id"
         const val KEY_SHOW_ADD_EVENT = "selected_show_add_event"
         const val KEY_ADMIN_PIN = "admin_pin"
+        const val KEY_FULLSCREEN = "selected_fullscreen"
     }
 }
