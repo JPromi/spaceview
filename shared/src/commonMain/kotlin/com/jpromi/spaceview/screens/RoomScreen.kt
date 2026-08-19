@@ -416,7 +416,8 @@ fun RoomScreen(
             onValidPinEnteredFunction = {
                 onOpenConfiguration()
             },
-            onDismiss = { isAdminPinPopupVisible = false }
+            onDismiss = { isAdminPinPopupVisible = false },
+            appSettings = appSettings
         )
     }
 }

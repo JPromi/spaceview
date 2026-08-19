@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -21,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.models.Room
@@ -175,15 +177,32 @@ fun ConfigurationScreen(
 
         // Admin Pin configuration
         var adminPin by remember { mutableStateOf(appSettings.adminPin) }
+        val isAdminPinValid = adminPin.isEmpty() || adminPin.length == 4
 
         OutlinedTextField(
             value = adminPin,
-            onValueChange = {
-                adminPin = it
-                appSettings.adminPin = it
+            onValueChange = { value ->
+                val sanitizedValue = value
+                    .filter { it.isDigit() }
+                    .take(4)
+
+                adminPin = sanitizedValue
+
+                if (sanitizedValue.isEmpty() || sanitizedValue.length == 4) {
+                    appSettings.adminPin = sanitizedValue
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Admin PIN") },
+            supportingText = {
+                if (!isAdminPinValid) {
+                    Text("PIN muss leer oder 4-stellig sein")
+                }
+            },
+            isError = !isAdminPinValid,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.NumberPassword
+            ),
             singleLine = true,
         )
 
