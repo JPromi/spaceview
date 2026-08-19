@@ -15,12 +15,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,6 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Settings
 import com.jpromi.spaceview.AppColor
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.elements.AdminPinPopup
@@ -260,14 +265,26 @@ fun RoomScreen(
                         .weight(1f),
                     contentAlignment = Alignment.BottomEnd,
                 ) {
-                    Button(
+                    IconButton(
                         onClick = if (appSettings.adminPin.isNotEmpty()) {
                             { isAdminPinPopupVisible = true }
                         } else {
                             onOpenConfiguration
-                        }
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = AppColor.textColor,
+                                shape = CircleShape
+                            ),
                     ) {
-                        Text("Einstellungen")
+                        Icon(
+                            imageVector = Lucide.Settings,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp),
+                        )
                     }
                 }
             }
