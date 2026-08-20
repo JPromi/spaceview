@@ -64,6 +64,9 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinxJson)
             implementation(libs.kotlinx.datetime)
             implementation(libs.multiplatform.settings.noArg)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+            implementation(libs.coil.svg)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

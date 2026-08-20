@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Settings
 import com.jpromi.spaceview.AppColor
@@ -125,7 +126,7 @@ fun RoomScreen(
     ) {
         if (isLoadingRoom || isLoadingAvailability) {
             // loading
-            Box (
+            Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
@@ -243,33 +244,44 @@ fun RoomScreen(
                     }
                 }
 
-                // Settings
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.BottomEnd,
+                Row(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    IconButton(
-                        onClick = if (appSettings.adminPin.isNotEmpty()) {
-                            { isAdminPinPopupVisible = true }
-                        } else {
-                            onOpenConfiguration
-                        },
-                        modifier = Modifier
-                            .size(48.dp)
-                            .border(
-                                width = 1.dp,
-                                color = AppColor.textColor,
-                                shape = CircleShape
-                            ),
-                    ) {
-                        Icon(
-                            imageVector = Lucide.Settings,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp),
+                    Box()
+                    {
+                        AsyncImage(
+                            model = roomService.getLogoUrl(), // works whether it resolves to .png or .svg
+                            contentDescription = "Logo",
+                            modifier = Modifier.fillMaxHeight()
                         )
+                    }
+
+                    // Settings
+                    Box()
+                    {
+                        IconButton(
+                            onClick = if (appSettings.adminPin.isNotEmpty()) {
+                                { isAdminPinPopupVisible = true }
+                            } else {
+                                onOpenConfiguration
+                            },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = AppColor.textColor,
+                                    shape = CircleShape
+                                ),
+                        ) {
+                            Icon(
+                                imageVector = Lucide.Settings,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
                     }
                 }
             }

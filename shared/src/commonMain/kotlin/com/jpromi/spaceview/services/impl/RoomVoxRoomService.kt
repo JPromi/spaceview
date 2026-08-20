@@ -25,8 +25,10 @@ import kotlinx.datetime.LocalTime
 class RoomVoxRoomService(
     private val calendarSettings: CalendarSettings = CalendarSettings(),
 ) : RoomService {
+    val httpServerUrl : String
+        get() = calendarSettings.roomVoxServerUrl.toHttpBaseUrl()
     val baseUrl: String
-        get() = calendarSettings.roomVoxServerUrl.toHttpBaseUrl() + "/apps/roomvox/api/v1"
+        get() = "$httpServerUrl/apps/roomvox/api/v1"
 
     // get Rooms
     override suspend fun getRooms(): ApiResult<List<Room>> = executeRoomVoxRequest { client ->
@@ -61,6 +63,10 @@ class RoomVoxRoomService(
             addAuthorizationHeader()
         }.body<List<RVRoomBookingDTO>>()
             .let { bookings -> generateSlotsFromBookings(bookings, date) }
+    }
+
+    override fun getLogoUrl(): String {
+        return "$httpServerUrl/apps/theming/image/logo"
     }
 
     // generate slots from events
