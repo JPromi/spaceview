@@ -1,12 +1,9 @@
 package com.jpromi.spaceview.controllers
 
-expect class FullscreenController {
-    constructor()
+import androidx.compose.runtime.staticCompositionLocalOf
 
-    companion object {
-        fun setFullscreen(enabled: Boolean)
-        fun isFullscreenSupported(): Boolean
-        //Needed?
-        //fun getFullscreen(): Boolean
-    }
+val LocalFullscreenController = staticCompositionLocalOf<FullscreenController?> { null }
+
+interface FullscreenController {
+    fun setFullscreen(enabled: Boolean)
 }

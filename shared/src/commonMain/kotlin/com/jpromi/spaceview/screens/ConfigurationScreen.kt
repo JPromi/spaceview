@@ -26,7 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jpromi.spaceview.AppSettings
-import com.jpromi.spaceview.controllers.FullscreenController
+import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.RoomVoxService
@@ -179,14 +179,16 @@ fun ConfigurationScreen(
 
         var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
 
-        if (FullscreenController.isFullscreenSupported()) {
+        val fullscreenController = LocalFullscreenController.current
+
+        if (fullscreenController != null) {
             Row (verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Switch(
                     checked = fullscreen,
-                    onCheckedChange = {
+                    onCheckedChange =  {
                         fullscreen = it
                         appSettings.fullscreen = it
-                        FullscreenController.setFullscreen(fullscreen)
+                        fullscreenController.setFullscreen(fullscreen)
                     }
                 )
                 Text("Fullscreen")

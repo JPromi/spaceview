@@ -1,21 +1,28 @@
 package com.jpromi.spaceview
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.jpromi.spaceview.controllers.AppWindowState
 import com.jpromi.spaceview.controllers.FullscreenController
+import com.jpromi.spaceview.controllers.LocalFullscreenController
 import java.awt.Dimension
 
 fun main() = application {
     val windowState = rememberWindowState(size = DpSize(1000.dp, 600.dp))
-    AppWindowState.windowState = windowState
 
-    val appSettings = AppSettings()
-    FullscreenController.setFullscreen(appSettings.fullscreen)
-
+    val holder = remember {
+        object : FullscreenController {
+            override fun setFullscreen(enabled: Boolean) {
+                windowState.placement =
+                    if (enabled) WindowPlacement.Fullscreen else WindowPlacement.Floating
+            }
+        }
+    }
 
     Window(
         onCloseRequest = ::exitApplication,
@@ -24,6 +31,8 @@ fun main() = application {
         state = windowState
     ) {
         window.minimumSize = Dimension(800, 600)
-        App()
+        CompositionLocalProvider(LocalFullscreenController provides holder) {
+            App()
+        }
     }
 }
