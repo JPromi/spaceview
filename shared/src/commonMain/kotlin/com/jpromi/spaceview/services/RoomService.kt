@@ -5,6 +5,7 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.models.Event
 import com.jpromi.spaceview.models.Room
+import com.jpromi.spaceview.models.RoomUse
 import com.jpromi.spaceview.models.Slot
 import com.jpromi.spaceview.network.ApiResult
 import kotlin.time.Clock
@@ -22,4 +23,10 @@ interface RoomService {
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
     ): ApiResult<List<Slot>>
+    suspend fun getRoomUse(
+        roomId: String,
+        date: LocalDate = Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+    ): ApiResult<RoomUse>
 }

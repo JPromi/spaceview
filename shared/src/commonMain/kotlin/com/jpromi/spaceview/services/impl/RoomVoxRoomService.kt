@@ -8,6 +8,7 @@ import com.jpromi.spaceview.dtos.roomvox.toRoom
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.Event
 import com.jpromi.spaceview.models.Room
+import com.jpromi.spaceview.models.RoomUse
 import com.jpromi.spaceview.models.Slot
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.executeRequest
@@ -18,9 +19,12 @@ import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
+import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class RoomVoxRoomService(
     private val calendarSettings: CalendarSettings = CalendarSettings(),
@@ -32,7 +36,8 @@ class RoomVoxRoomService(
     override suspend fun getRooms(): ApiResult<List<Room>> = executeRoomVoxRequest { client ->
         client.get("$baseUrl/rooms") {
             addAuthorizationHeader()
-        }.body<List<RVRoomDTO>>()
+        }
+            .body<List<RVRoomDTO>>()
             .map { it.toRoom() }
     }
 
@@ -40,7 +45,8 @@ class RoomVoxRoomService(
     override suspend fun getRoomById(roomId: String): ApiResult<Room?> = executeRoomVoxRequest { client ->
         client.get("$baseUrl/rooms/$roomId") {
             addAuthorizationHeader()
-        }.body<RVRoomDTO>()
+        }
+            .body<RVRoomDTO>()
             .toRoom()
     }
 
@@ -49,7 +55,8 @@ class RoomVoxRoomService(
     override suspend fun getRoomEvents(roomId: String): ApiResult<List<Event>> = executeRoomVoxRequest { client ->
         client.get("$baseUrl/rooms/$roomId/bookings") {
             addAuthorizationHeader()
-        }.body<List<RVRoomBookingDTO>>()
+        }
+            .body<List<RVRoomBookingDTO>>()
             .map { it.toEvent() }
     }
 
@@ -59,8 +66,54 @@ class RoomVoxRoomService(
         val to = LocalDateTime(date, LocalTime(23, 59, 59))
         client.get("$baseUrl/rooms/$roomId/bookings?from=$from&to=$to") {
             addAuthorizationHeader()
-        }.body<List<RVRoomBookingDTO>>()
+        }
+            .body<List<RVRoomBookingDTO>>()
             .let { bookings -> generateSlotsFromBookings(bookings, date) }
+    }
+
+    // get Room use for date
+    override suspend fun getRoomUse(roomId: String, date: LocalDate): ApiResult<RoomUse> = executeRoomVoxRequest { client ->
+        val from = LocalDateTime(date, LocalTime(0, 0))
+        val to = LocalDateTime(date, LocalTime(23, 59, 59))
+        client.get("$baseUrl/rooms/$roomId/bookings?from=$from&to=$to") {
+            addAuthorizationHeader()
+        }
+            .body<List<RVRoomBookingDTO>>()
+            .let { bookings ->
+                val now = Clock.System.now()
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                val eventsWithTime = bookings
+                    .mapNotNull { booking ->
+                        val start = booking.start.toRoomVoxLocalDateTimeOrNull()
+                        val end = booking.end.toRoomVoxLocalDateTimeOrNull()
+
+                        if (start == null || end == null) {
+                            null
+                        } else {
+                            EventTime(
+                                event = booking.toEvent(),
+                                start = start,
+                                end = end,
+                            )
+                        }
+                    }
+                    .filter { it.end > it.start }
+                    .sortedBy { it.start }
+
+                RoomUse(
+                    date = date,
+                    slots = generateSlotsFromBookings(bookings, date),
+                    currentEvent = eventsWithTime
+                        .firstOrNull { it.start <= now && now < it.end }
+                        ?.event,
+                    futureEvents = eventsWithTime
+                        .filter { it.start > now }
+                        .map { it.event },
+                    pastEvents = eventsWithTime
+                        .filter { it.end <= now }
+                        .map { it.event },
+                )
+            }
     }
 
     // generate slots from events
@@ -160,6 +213,12 @@ class RoomVoxRoomService(
 
     private data class BookingTime(
         val booking: RVRoomBookingDTO,
+        val start: LocalDateTime,
+        val end: LocalDateTime,
+    )
+
+    private data class EventTime(
+        val event: Event,
         val start: LocalDateTime,
         val end: LocalDateTime,
     )
