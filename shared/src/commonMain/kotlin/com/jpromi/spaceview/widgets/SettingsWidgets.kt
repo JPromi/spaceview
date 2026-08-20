@@ -2,6 +2,7 @@ package com.jpromi.spaceview.widgets
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,4 +18,9 @@ fun SettingsSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, text
         )
         Text(text)
     }
+}
+
+@Composable
+fun SettingsSectionHeader(text: String) {
+    Text(text, style = MaterialTheme.typography.headlineSmall)
 }
