@@ -48,6 +48,7 @@ import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
+import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.models.RoomUse
@@ -55,6 +56,7 @@ import com.jpromi.spaceview.models.Slot
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toUserMessage
 import com.jpromi.spaceview.services.RoomService
+import com.jpromi.spaceview.services.impl.DemoRoomService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDateTime
@@ -67,8 +69,9 @@ fun RoomScreen(
     onOpenConfiguration: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
     calendarSettings: CalendarSettings = CalendarSettings(),
-    roomService: RoomService = remember { RoomVoxRoomService(calendarSettings) },
 ) {
+    var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
+
     var roomUse by remember { mutableStateOf<RoomUse?>(null) }
     var room by remember { mutableStateOf<Room?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -81,6 +84,17 @@ fun RoomScreen(
     var isAdminPinPopupVisible by remember { mutableStateOf(false) }
 
 
+    fun initRoomService() {
+        when (calendarSettings.calendarProvider) {
+            CalendarProviderENUM.ROOMVOX -> {
+                roomService = RoomVoxRoomService()
+            }
+            else -> {
+                roomService = DemoRoomService()
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         while (true) {
             val now = Clock.System.now()
@@ -92,7 +106,8 @@ fun RoomScreen(
         }
     }
 
-    LaunchedEffect(calendarSettings.selectedRoomId) {
+    LaunchedEffect(calendarSettings.selectedRoomId, calendarSettings.calendarProvider) {
+        initRoomService()
         isLoadingRoom = true
         isLoadingAvailability = true
 
