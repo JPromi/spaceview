@@ -126,7 +126,7 @@ class RoomVoxRoomService(
                 Slot(
                     start = dayStart,
                     end = dayEnd,
-                    status = SlotStatus.free,
+                    status = SlotStatus.FREE,
                 )
             )
         }
@@ -156,7 +156,7 @@ class RoomVoxRoomService(
                 Slot(
                     start = dayStart,
                     end = dayEnd,
-                    status = SlotStatus.free,
+                    status = SlotStatus.FREE,
                 )
             )
         }
@@ -177,7 +177,7 @@ class RoomVoxRoomService(
                     Slot(
                         start = currentTime,
                         end = bookingStart,
-                        status = SlotStatus.free,
+                        status = SlotStatus.FREE,
                     )
                 )
             }
@@ -188,7 +188,7 @@ class RoomVoxRoomService(
                     start = maxOf(bookingStart, currentTime),
                     end = bookingEnd,
                     event = bookingTime.booking.toEvent(),
-                    status = SlotStatus.busy,
+                    status = SlotStatus.BOOKED,
                 )
             )
 
@@ -203,7 +203,7 @@ class RoomVoxRoomService(
                 Slot(
                     start = currentTime,
                     end = dayEnd,
-                    status = SlotStatus.free,
+                    status = SlotStatus.FREE,
                 )
             )
         }

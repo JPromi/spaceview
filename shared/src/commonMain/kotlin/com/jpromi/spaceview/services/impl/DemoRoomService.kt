@@ -7,7 +7,6 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.dtos.roomvox.RVTodayRoomBookingDTO
-import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.services.RoomService
 

@@ -334,7 +334,7 @@ fun RoomScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .background(
-                                                        color = if (slot.status == SlotStatus.busy) {
+                                                        color = if (slot.status == SlotStatus.BOOKED) {
                                                             AppColor.busyTagBackground
                                                         } else {
                                                             AppColor.freeTagBackground
@@ -345,7 +345,7 @@ fun RoomScreen(
                                             ) {
                                                 Text(
                                                     text = slot.status.toString(),
-                                                    color = if (slot.status == SlotStatus.busy) {
+                                                    color = if (slot.status == SlotStatus.BOOKED) {
                                                         AppColor.busyTabTextColor
                                                     } else {
                                                         AppColor.freeTabTextColor
@@ -363,7 +363,7 @@ fun RoomScreen(
 
                                         // Title
                                         Text(
-                                            text = if (slot.status == SlotStatus.busy) {
+                                            text = if (slot.status == SlotStatus.BOOKED) {
                                                 slot.event?.title ?: "Belegt"
                                             } else {
                                                 "Frei"
