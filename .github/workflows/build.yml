@@ -1,0 +1,48 @@
+name: build
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096M -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+
+jobs:
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gradle setup
+        uses: ./.github/actions/gradle-setup
+
+      - name: Build Release Deb
+        run: ./gradlew :desktopApp:packageReleaseDeb
+
+      - name: Upload Release Deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-deb
+          path: desktopApp/build/compose/binaries/main-release/deb/*.deb
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gradle setup
+        uses: ./.github/actions/gradle-setup
+
+      - name: Build Release Msi
+        run: ./gradlew :desktopApp:packageReleaseMsi
+
+      - name: Upload Release Msi
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-msi
+          path: desktopApp/build/compose/binaries/main-release/msi/*.msi
