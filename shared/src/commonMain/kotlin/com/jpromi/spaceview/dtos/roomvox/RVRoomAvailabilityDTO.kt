@@ -1,6 +1,5 @@
 package com.jpromi.spaceview.dtos.roomvox
 
-import com.jpromi.spaceview.enums.SlotStatus
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -22,6 +21,6 @@ data class RVAvailabilityRoomDTO(
 data class RVAvailabilitySlotDTO(
     var start: String,
     var end: String,
-    var status: SlotStatus,
+    var status: RVSlotStatusDTO,
     var title: String? = null,
 )

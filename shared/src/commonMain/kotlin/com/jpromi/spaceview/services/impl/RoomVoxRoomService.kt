@@ -8,6 +8,7 @@ import com.jpromi.spaceview.dtos.roomvox.toRoom
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.Event
 import com.jpromi.spaceview.models.Room
+import com.jpromi.spaceview.models.RoomUse
 import com.jpromi.spaceview.models.Slot
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.executeRequest
@@ -18,23 +19,51 @@ import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
+import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class RoomVoxRoomService(
     private val calendarSettings: CalendarSettings = CalendarSettings(),
 ) : RoomService {
-    val httpServerUrl : String
-        get() = calendarSettings.roomVoxServerUrl.toHttpBaseUrl()
+    private var configuredServerUrl: String? = null
+    private var configuredAccessToken: String? = null
+
+    private val effectiveServerUrl: String
+        get() = configuredServerUrl ?: calendarSettings.roomVoxServerUrl
+
+    private val effectiveAccessToken: String
+        get() = configuredAccessToken ?: calendarSettings.roomVoxAccessToken
+
     val baseUrl: String
-        get() = "$httpServerUrl/apps/roomvox/api/v1"
+        get() = effectiveServerUrl.toHttpBaseUrl() + "/apps/roomvox/api/v1"
+
+    override fun configure(
+        serverUrl: String,
+        accessToken: String,
+    ) {
+        configuredServerUrl = serverUrl
+        configuredAccessToken = accessToken
+    }
+
+    // check connection
+    override suspend fun checkCredentials(): ApiResult<String> = executeRoomVoxRequest { client ->
+        client.get("${baseUrl}/rooms") {
+            addAuthorizationHeader()
+        }
+            .body<List<RVRoomDTO>>()
+        ""
+    }
 
     // get Rooms
     override suspend fun getRooms(): ApiResult<List<Room>> = executeRoomVoxRequest { client ->
         client.get("$baseUrl/rooms") {
             addAuthorizationHeader()
-        }.body<List<RVRoomDTO>>()
+        }
+            .body<List<RVRoomDTO>>()
             .map { it.toRoom() }
     }
 
@@ -42,7 +71,8 @@ class RoomVoxRoomService(
     override suspend fun getRoomById(roomId: String): ApiResult<Room?> = executeRoomVoxRequest { client ->
         client.get("$baseUrl/rooms/$roomId") {
             addAuthorizationHeader()
-        }.body<RVRoomDTO>()
+        }
+            .body<RVRoomDTO>()
             .toRoom()
     }
 
@@ -51,7 +81,8 @@ class RoomVoxRoomService(
     override suspend fun getRoomEvents(roomId: String): ApiResult<List<Event>> = executeRoomVoxRequest { client ->
         client.get("$baseUrl/rooms/$roomId/bookings") {
             addAuthorizationHeader()
-        }.body<List<RVRoomBookingDTO>>()
+        }
+            .body<List<RVRoomBookingDTO>>()
             .map { it.toEvent() }
     }
 
@@ -61,12 +92,56 @@ class RoomVoxRoomService(
         val to = LocalDateTime(date, LocalTime(23, 59, 59))
         client.get("$baseUrl/rooms/$roomId/bookings?from=$from&to=$to") {
             addAuthorizationHeader()
-        }.body<List<RVRoomBookingDTO>>()
+        }
+            .body<List<RVRoomBookingDTO>>()
             .let { bookings -> generateSlotsFromBookings(bookings, date) }
     }
 
     override fun getLogoUrl(): String {
-        return "$httpServerUrl/apps/theming/image/logo"
+        return "$effectiveServerUrl/apps/theming/image/logo"
+    // get Room use for date
+    override suspend fun getRoomUse(roomId: String, date: LocalDate): ApiResult<RoomUse> = executeRoomVoxRequest { client ->
+        val from = LocalDateTime(date, LocalTime(0, 0))
+        val to = LocalDateTime(date, LocalTime(23, 59, 59))
+        client.get("$baseUrl/rooms/$roomId/bookings?from=$from&to=$to") {
+            addAuthorizationHeader()
+        }
+            .body<List<RVRoomBookingDTO>>()
+            .let { bookings ->
+                val now = Clock.System.now()
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                val eventsWithTime = bookings
+                    .mapNotNull { booking ->
+                        val start = booking.start.toRoomVoxLocalDateTimeOrNull()
+                        val end = booking.end.toRoomVoxLocalDateTimeOrNull()
+
+                        if (start == null || end == null) {
+                            null
+                        } else {
+                            EventTime(
+                                event = booking.toEvent(),
+                                start = start,
+                                end = end,
+                            )
+                        }
+                    }
+                    .filter { it.end > it.start }
+                    .sortedBy { it.start }
+
+                RoomUse(
+                    date = date,
+                    slots = generateSlotsFromBookings(bookings, date),
+                    currentEvent = eventsWithTime
+                        .firstOrNull { it.start <= now && now < it.end }
+                        ?.event,
+                    futureEvents = eventsWithTime
+                        .filter { it.start > now }
+                        .map { it.event },
+                    pastEvents = eventsWithTime
+                        .filter { it.end <= now }
+                        .map { it.event },
+                )
+            }
     }
 
     // generate slots from events
@@ -79,7 +154,7 @@ class RoomVoxRoomService(
                 Slot(
                     start = dayStart,
                     end = dayEnd,
-                    status = SlotStatus.free,
+                    status = SlotStatus.FREE,
                 )
             )
         }
@@ -109,7 +184,7 @@ class RoomVoxRoomService(
                 Slot(
                     start = dayStart,
                     end = dayEnd,
-                    status = SlotStatus.free,
+                    status = SlotStatus.FREE,
                 )
             )
         }
@@ -130,7 +205,7 @@ class RoomVoxRoomService(
                     Slot(
                         start = currentTime,
                         end = bookingStart,
-                        status = SlotStatus.free,
+                        status = SlotStatus.FREE,
                     )
                 )
             }
@@ -141,7 +216,7 @@ class RoomVoxRoomService(
                     start = maxOf(bookingStart, currentTime),
                     end = bookingEnd,
                     event = bookingTime.booking.toEvent(),
-                    status = SlotStatus.busy,
+                    status = SlotStatus.BOOKED,
                 )
             )
 
@@ -156,7 +231,7 @@ class RoomVoxRoomService(
                 Slot(
                     start = currentTime,
                     end = dayEnd,
-                    status = SlotStatus.free,
+                    status = SlotStatus.FREE,
                 )
             )
         }
@@ -166,6 +241,12 @@ class RoomVoxRoomService(
 
     private data class BookingTime(
         val booking: RVRoomBookingDTO,
+        val start: LocalDateTime,
+        val end: LocalDateTime,
+    )
+
+    private data class EventTime(
+        val event: Event,
         val start: LocalDateTime,
         val end: LocalDateTime,
     )
@@ -221,14 +302,14 @@ class RoomVoxRoomService(
     private suspend fun <T> executeRoomVoxRequest(request: suspend (HttpClient) -> T): ApiResult<T> =
         executeRequest(
             invalidRequestMessage = "Bitte Server-URL eingeben.",
-            isRequestValid = { calendarSettings.roomVoxServerUrl.isNotBlank() },
+            isRequestValid = { effectiveServerUrl.isNotBlank() },
             request = request,
         )
 
     // Authorization logik
     private fun HttpRequestBuilder.addAuthorizationHeader() {
-        if (calendarSettings.roomVoxAccessToken.isNotBlank()) {
-            bearerAuth(calendarSettings.roomVoxAccessToken.trim())
+        if (effectiveAccessToken.isNotBlank()) {
+            bearerAuth(effectiveAccessToken.trim())
         }
     }
 }

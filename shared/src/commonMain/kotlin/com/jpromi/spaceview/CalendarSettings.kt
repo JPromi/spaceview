@@ -1,16 +1,21 @@
 package com.jpromi.spaceview
 
-import com.jpromi.spaceview.enums.CalendarProvider
+import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.get
 
 class CalendarSettings(
     private val settings: Settings = Settings()
 ) {
-    var calendarProvider: CalendarProvider?
-        get() = settings.get<CalendarProvider>(KEY_PROVIDER)
+    var calendarProvider: CalendarProviderENUM?
+        get() = settings.getStringOrNull(KEY_PROVIDER)
+            ?.let { runCatching { CalendarProviderENUM.valueOf(it) }.getOrNull() }
         set(value) {
-            settings.putString(KEY_PROVIDER, value.toString())
+            if (value == null) {
+                settings.remove(KEY_PROVIDER)
+            } else {
+                settings.putString(KEY_PROVIDER, value.name)
+            }
         }
 
     // RoomVox Nextcloud
