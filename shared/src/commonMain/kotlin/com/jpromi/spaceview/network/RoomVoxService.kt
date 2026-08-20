@@ -1,6 +1,7 @@
 package com.jpromi.spaceview.network
 
 import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
@@ -15,9 +16,10 @@ import kotlinx.coroutines.CancellationException
 
 class RoomVoxService(
     private val appSettings: AppSettings = AppSettings(),
+    private val calendarSettings: CalendarSettings = CalendarSettings(),
 ) {
     val baseUrl: String
-        get() = appSettings.serverUrl.toHttpBaseUrl() + "/apps/roomvox/api/v1"
+        get() = calendarSettings.roomVoxServerUrl.toHttpBaseUrl() + "/apps/roomvox/api/v1"
 
     suspend fun getRooms(): ApiResult<List<RVRoomDTO>> = executeRequest { client ->
         client.get("$baseUrl/rooms") {
@@ -64,7 +66,7 @@ class RoomVoxService(
     private suspend fun <T> executeRequest(
         request: suspend (HttpClient) -> T,
     ): ApiResult<T> {
-        if (appSettings.serverUrl.isBlank()) {
+        if (calendarSettings.roomVoxServerUrl.isBlank()) {
             return ApiResult.InvalidRequest("Bitte Server-URL eingeben.")
         }
 
@@ -91,8 +93,8 @@ class RoomVoxService(
     }
 
     private fun HttpRequestBuilder.addAuthorizationHeader() {
-        if (appSettings.accessToken.isNotBlank()) {
-            bearerAuth(appSettings.accessToken.trim())
+        if (calendarSettings.roomVoxAccessToken.isNotBlank()) {
+            bearerAuth(calendarSettings.roomVoxAccessToken.trim())
         }
     }
 }

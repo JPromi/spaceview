@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.dtos.roomvox.RVRoomDTO
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.RoomVoxService
@@ -36,14 +37,15 @@ import kotlinx.coroutines.launch
 fun ConfigurationScreen(
     onGoBack: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
+    calendarSettings: CalendarSettings = remember { CalendarSettings() },
     roomVoxService: RoomVoxService = remember { RoomVoxService(appSettings) },
 ) {
-    var serverUrl by remember { mutableStateOf(appSettings.serverUrl) }
-    var accessToken by remember { mutableStateOf(appSettings.accessToken) }
+    var serverUrl by remember { mutableStateOf(calendarSettings.roomVoxServerUrl) }
+    var accessToken by remember { mutableStateOf(calendarSettings.roomVoxAccessToken) }
     var serverCheckResult by remember { mutableStateOf<ServerConnectionResult?>(null) }
     var isCheckingServer by remember { mutableStateOf(false) }
     var isRoomMenuExpanded by remember { mutableStateOf(false) }
-    var selectedRoomId by remember { mutableStateOf(appSettings.selectedRoomId) }
+    var selectedRoomId by remember { mutableStateOf(calendarSettings.selectedRoomId) }
     val coroutineScope = rememberCoroutineScope()
 
     val rooms = remember { mutableStateListOf<RVRoomDTO>() }
@@ -61,7 +63,7 @@ fun ConfigurationScreen(
             value = serverUrl,
             onValueChange = {
                 serverUrl = it
-                appSettings.serverUrl = it
+                calendarSettings.roomVoxServerUrl = it
                 serverCheckResult = null
             },
             modifier = Modifier.fillMaxWidth(),
@@ -75,7 +77,7 @@ fun ConfigurationScreen(
             value = accessToken,
             onValueChange = {
                 accessToken = it
-                appSettings.accessToken = it
+                calendarSettings.roomVoxAccessToken = it
                 serverCheckResult = null
             },
             modifier = Modifier.fillMaxWidth(),
@@ -96,7 +98,7 @@ fun ConfigurationScreen(
                             rooms.addAll(result.data)
                             if (rooms.none { it.id == selectedRoomId }) {
                                 selectedRoomId = ""
-                                appSettings.selectedRoomId = ""
+                                calendarSettings.selectedRoomId = ""
                             }
                             ServerConnectionResult.Success(
                                 "Verbindung OK. ${rooms.size} Räume gefunden."
@@ -152,7 +154,7 @@ fun ConfigurationScreen(
                             text = { Text("${room.name} (ID: ${room.id})") },
                             onClick = {
                                 selectedRoomId = room.id
-                                appSettings.selectedRoomId = room.id
+                                calendarSettings.selectedRoomId = room.id
                                 isRoomMenuExpanded = false
                             },
                         )
@@ -164,13 +166,13 @@ fun ConfigurationScreen(
         }
 
         // settings
-        var showAddEvent by remember { mutableStateOf(appSettings.showAddEvent) }
+        var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
 
         Switch(
             checked = showAddEvent,
             onCheckedChange = {
                 showAddEvent = it
-                appSettings.showAddEvent = it
+                calendarSettings.showAddEvent = it
             },
         )
         Text("Show Add Event")

@@ -43,6 +43,7 @@ import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Settings
 import com.jpromi.spaceview.AppColor
 import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
@@ -59,6 +60,7 @@ import kotlin.time.Clock
 fun RoomScreen(
     onOpenConfiguration: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
+    calendarSettings: CalendarSettings = CalendarSettings(),
     roomVoxService: RoomVoxService = remember { RoomVoxService(appSettings) },
 ) {
     var roomStatus by remember { mutableStateOf<RVRoomStatusDTO?>(null) }
@@ -84,12 +86,12 @@ fun RoomScreen(
         }
     }
 
-    LaunchedEffect(appSettings.selectedRoomId) {
+    LaunchedEffect(calendarSettings.selectedRoomId) {
         isLoadingRoom = true
         isLoadingAvailability = true
 
         while (true) {
-            when (val result = roomVoxService.getRoomStatus(appSettings.selectedRoomId)) {
+            when (val result = roomVoxService.getRoomStatus(calendarSettings.selectedRoomId)) {
                 is ApiResult.Success -> roomStatus = result.data
                 is ApiResult.Error -> {
                     roomStatus = null
@@ -98,7 +100,7 @@ fun RoomScreen(
             }
             isLoadingRoom = false
 
-            when (val result = roomVoxService.getRoomAvailability(appSettings.selectedRoomId)) {
+            when (val result = roomVoxService.getRoomAvailability(calendarSettings.selectedRoomId)) {
                 is ApiResult.Success -> roomAvailability = result.data
                 is ApiResult.Error -> {
                     roomAvailability = null
@@ -386,7 +388,7 @@ fun RoomScreen(
                     }
                 }
 
-                if (appSettings.showAddEvent) {
+                if (calendarSettings.showAddEvent) {
                     Button(
                         modifier = Modifier
                             .fillMaxWidth()
