@@ -1,7 +1,9 @@
 package com.jpromi.spaceview.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,10 +25,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
@@ -180,6 +184,24 @@ fun ConfigurationScreen(
             },
         )
         Text("Show Add Event")
+
+        var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
+
+        val fullscreenController = LocalFullscreenController.current
+
+        if (fullscreenController != null) {
+            Row (verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Switch(
+                    checked = fullscreen,
+                    onCheckedChange =  {
+                        fullscreen = it
+                        appSettings.fullscreen = it
+                        fullscreenController.setFullscreen(fullscreen)
+                    }
+                )
+                Text("Fullscreen")
+            }
+        }
 
         // Admin Pin configuration
         var adminPin by remember { mutableStateOf(appSettings.adminPin) }
