@@ -48,10 +48,14 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.enums.SlotStatus
+import com.jpromi.spaceview.models.Room
+import com.jpromi.spaceview.models.Slot
 import com.jpromi.spaceview.network.ApiResult
-import com.jpromi.spaceview.network.RoomVoxService
 import com.jpromi.spaceview.network.toUserMessage
+import com.jpromi.spaceview.services.RoomService
+import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import kotlinx.coroutines.delay
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -61,10 +65,10 @@ fun RoomScreen(
     onOpenConfiguration: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
     calendarSettings: CalendarSettings = CalendarSettings(),
-    roomVoxService: RoomVoxService = remember { RoomVoxService(appSettings) },
+    roomService: RoomService = remember { RoomVoxRoomService(calendarSettings) },
 ) {
-    var roomStatus by remember { mutableStateOf<RVRoomStatusDTO?>(null) }
-    var roomAvailability by remember { mutableStateOf<RVRoomAvailabilityDTO?>(null) }
+    var roomSlots by remember { mutableStateOf<List<Slot>?>(null) }
+    var room by remember { mutableStateOf<Room?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoadingRoom by remember { mutableStateOf(true) }
     var isLoadingAvailability by remember { mutableStateOf(true) }
@@ -91,43 +95,25 @@ fun RoomScreen(
         isLoadingAvailability = true
 
         while (true) {
-            when (val result = roomVoxService.getRoomStatus(calendarSettings.selectedRoomId)) {
-                is ApiResult.Success -> roomStatus = result.data
+            when (val result = roomService.getRoomById(calendarSettings.selectedRoomId)) {
+                is ApiResult.Success -> room = result.data
                 is ApiResult.Error -> {
-                    roomStatus = null
+                    room = null
                     errorMessage = result.toUserMessage()
                 }
             }
             isLoadingRoom = false
 
-            when (val result = roomVoxService.getRoomAvailability(calendarSettings.selectedRoomId)) {
-                is ApiResult.Success -> roomAvailability = result.data
+            when (val result = roomService.getRoomSlots(calendarSettings.selectedRoomId)) {
+                is ApiResult.Success -> roomSlots = result.data
                 is ApiResult.Error -> {
-                    roomAvailability = null
+                    roomSlots = null
                     errorMessage = result.toUserMessage()
                 }
             }
             isLoadingAvailability = false
             delay(30_000) // 30 seconds
         }
-    }
-
-    fun getWeightFromTime(startTime: String, endTime: String): Long {
-        // time = "HH:mm"
-
-        val startParts = startTime.split(":")
-        val endParts = endTime.split(":")
-
-        val startHour = startParts[0].toIntOrNull() ?: 0
-        val startMinute = startParts[1].toIntOrNull() ?: 0
-
-        val endHour = endParts[0].toIntOrNull() ?: 0
-        val endMinute = endParts[1].toIntOrNull() ?: 0
-
-        val startTotalMinutes = startHour * 60 + startMinute
-        val endTotalMinutes = endHour * 60 + endMinute
-
-        return (endTotalMinutes - startTotalMinutes).toLong()
     }
 
     // UI
@@ -173,7 +159,7 @@ fun RoomScreen(
                     verticalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        text = roomStatus?.room?.name ?: "",
+                        text = room?.name ?: "",
                         modifier = Modifier.padding(bottom = 4.dp),
                         fontWeight = FontWeight.W500,
                         fontSize = 30.sp,
@@ -188,7 +174,7 @@ fun RoomScreen(
                         modifier = Modifier
                             .border(
                                 width = 1.dp,
-                                color = if (roomStatus?.currentBooking != null) {
+                                color = if (null != null) { // ToDo: Implement current booking
                                     AppColor.busyTagBackground
                                 } else {
                                     AppColor.freeTagBackground
@@ -198,7 +184,7 @@ fun RoomScreen(
                             .background(
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
-                                        if (roomStatus?.currentBooking != null) {
+                                        if (null != null) { // ToDo: Implement current booking
                                             AppColor.busyTagBackground
                                         } else {
                                             AppColor.freeTagBackground
@@ -212,7 +198,7 @@ fun RoomScreen(
                             .height(90.dp)
                             .fillMaxWidth()
                     ) {
-                        if (roomStatus?.currentBooking != null) {
+                        if (null != null) { // ToDo: Implement current booking
                             // busy
                             Column(
                                 modifier = Modifier
@@ -300,8 +286,8 @@ fun RoomScreen(
                     if (isLoadingAvailability) {
                         CircularProgressIndicator()
                     } else {
-                        val slots = roomAvailability?.slots.orEmpty().filter { slot ->
-                            timeToMinutes(slot.end) > currentMinuteOfDay
+                        val slots = roomSlots.orEmpty().filter { slot ->
+                            slot.end.toMinuteOfDay() > currentMinuteOfDay
                         }
 
                         BoxWithConstraints(
@@ -313,7 +299,9 @@ fun RoomScreen(
                             val totalSpacing = spacing * (slots.size - 1).coerceAtLeast(0)
                             val availableSlotHeight = maxOf(0.dp, maxHeight - totalSpacing)
                             val durations = slots.map {
-                                getWeightFromTime(it.start, it.end).coerceAtLeast(1L)
+                                (it.end.toMinuteOfDay() - it.start.toMinuteOfDay())
+                                    .coerceAtLeast(1)
+                                    .toLong()
                             }
                             val slotHeights = calculateSlotHeights(
                                 availableHeight = availableSlotHeight,
@@ -366,7 +354,7 @@ fun RoomScreen(
 
                                             // Time
                                             Text(
-                                                text = "${slot.start} - ${slot.end}",
+                                                text = "${slot.start.toTimeText()} - ${slot.end.toTimeText()}",
                                                 color = AppColor.textColor,
                                             )
                                         }
@@ -375,7 +363,7 @@ fun RoomScreen(
                                         // Title
                                         Text(
                                             text = if (slot.status == SlotStatus.busy) {
-                                                slot.title ?: "Belegt"
+                                                slot.event?.title ?: "Belegt"
                                             } else {
                                                 "Frei"
                                             },
@@ -466,11 +454,8 @@ private fun calculateSlotHeights(
     return heights.map { it.dp }
 }
 
-private fun timeToMinutes(time: String): Int {
-    val parts = time.split(":")
-    val hour = parts.getOrNull(0)?.toIntOrNull() ?: return 0
-    val minute = parts.getOrNull(1)?.toIntOrNull() ?: return 0
-    return hour * 60 + minute
-}
+private fun LocalDateTime.toMinuteOfDay(): Int = hour * 60 + minute
+
+private fun LocalDateTime.toTimeText(): String = "${hour.twoDigits()}:${minute.twoDigits()}"
 
 private fun Int.twoDigits(): String = toString().padStart(2, '0')

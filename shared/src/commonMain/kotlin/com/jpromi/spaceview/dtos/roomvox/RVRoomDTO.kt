@@ -1,5 +1,6 @@
 package com.jpromi.spaceview.dtos.roomvox
 
+import com.jpromi.spaceview.models.Room
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -17,3 +18,18 @@ data class RVRoomDTO(
     var autoAccept: Boolean,
     var active: Boolean,
 )
+
+public fun RVRoomDTO.toRoom(): Room {
+    return Room(
+        id = id,
+        name = name,
+        email = email,
+        capacity = capacity,
+        roomNumber = roomNumber,
+        roomType = roomType,
+        facilities = facilities,
+        description = description,
+        location = location,
+        active = active,
+    )
+}

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -29,11 +28,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.CalendarSettings
-import com.jpromi.spaceview.dtos.roomvox.RVRoomDTO
+import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
-import com.jpromi.spaceview.network.RoomVoxService
 import com.jpromi.spaceview.network.ServerConnectionResult
 import com.jpromi.spaceview.network.toUserMessage
+import com.jpromi.spaceview.services.RoomService
+import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import kotlinx.coroutines.launch
 
 @Composable
@@ -41,7 +41,7 @@ fun ConfigurationScreen(
     onGoBack: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
     calendarSettings: CalendarSettings = remember { CalendarSettings() },
-    roomVoxService: RoomVoxService = remember { RoomVoxService(appSettings) },
+    roomService: RoomService = remember { RoomVoxRoomService(calendarSettings) },
 ) {
     var serverUrl by remember { mutableStateOf(calendarSettings.roomVoxServerUrl) }
     var accessToken by remember { mutableStateOf(calendarSettings.roomVoxAccessToken) }
@@ -51,7 +51,7 @@ fun ConfigurationScreen(
     var selectedRoomId by remember { mutableStateOf(calendarSettings.selectedRoomId) }
     val coroutineScope = rememberCoroutineScope()
 
-    val rooms = remember { mutableStateListOf<RVRoomDTO>() }
+    val rooms = remember { mutableStateListOf<Room>() }
 
     Column(
         modifier = Modifier
@@ -96,7 +96,7 @@ fun ConfigurationScreen(
                 coroutineScope.launch {
                     isCheckingServer = true
                     serverCheckResult = null
-                    serverCheckResult = when (val result = roomVoxService.getRooms()) {
+                    serverCheckResult = when (val result = roomService.getRooms()) {
                         is ApiResult.Success -> {
                             rooms.clear()
                             rooms.addAll(result.data)
