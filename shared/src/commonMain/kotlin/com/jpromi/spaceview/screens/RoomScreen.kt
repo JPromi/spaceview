@@ -49,6 +49,7 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.Room
+import com.jpromi.spaceview.models.RoomUse
 import com.jpromi.spaceview.models.Slot
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toUserMessage
@@ -67,7 +68,7 @@ fun RoomScreen(
     calendarSettings: CalendarSettings = CalendarSettings(),
     roomService: RoomService = remember { RoomVoxRoomService(calendarSettings) },
 ) {
-    var roomSlots by remember { mutableStateOf<List<Slot>?>(null) }
+    var roomUse by remember { mutableStateOf<RoomUse?>(null) }
     var room by remember { mutableStateOf<Room?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoadingRoom by remember { mutableStateOf(true) }
@@ -104,10 +105,10 @@ fun RoomScreen(
             }
             isLoadingRoom = false
 
-            when (val result = roomService.getRoomSlots(calendarSettings.selectedRoomId)) {
-                is ApiResult.Success -> roomSlots = result.data
+            when (val result = roomService.getRoomUse(calendarSettings.selectedRoomId)) {
+                is ApiResult.Success -> roomUse = result.data
                 is ApiResult.Error -> {
-                    roomSlots = null
+                    roomUse = null
                     errorMessage = result.toUserMessage()
                 }
             }
@@ -174,7 +175,7 @@ fun RoomScreen(
                         modifier = Modifier
                             .border(
                                 width = 1.dp,
-                                color = if (null != null) { // ToDo: Implement current booking
+                                color = if (roomUse?.currentEvent != null) {
                                     AppColor.busyTagBackground
                                 } else {
                                     AppColor.freeTagBackground
@@ -184,7 +185,7 @@ fun RoomScreen(
                             .background(
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
-                                        if (null != null) { // ToDo: Implement current booking
+                                        if (roomUse?.currentEvent != null) {
                                             AppColor.busyTagBackground
                                         } else {
                                             AppColor.freeTagBackground
@@ -198,7 +199,7 @@ fun RoomScreen(
                             .height(90.dp)
                             .fillMaxWidth()
                     ) {
-                        if (null != null) { // ToDo: Implement current booking
+                        if (roomUse?.currentEvent != null) {
                             // busy
                             Column(
                                 modifier = Modifier
@@ -286,7 +287,7 @@ fun RoomScreen(
                     if (isLoadingAvailability) {
                         CircularProgressIndicator()
                     } else {
-                        val slots = roomSlots.orEmpty().filter { slot ->
+                        val slots = roomUse?.slots.orEmpty().filter { slot ->
                             slot.end.toMinuteOfDay() > currentMinuteOfDay
                         }
 
@@ -333,7 +334,7 @@ fun RoomScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .background(
-                                                        color = if (slot.status == SlotStatus.busy) {
+                                                        color = if (slot.status == SlotStatus.BOOKED) {
                                                             AppColor.busyTagBackground
                                                         } else {
                                                             AppColor.freeTagBackground
@@ -344,7 +345,7 @@ fun RoomScreen(
                                             ) {
                                                 Text(
                                                     text = slot.status.toString(),
-                                                    color = if (slot.status == SlotStatus.busy) {
+                                                    color = if (slot.status == SlotStatus.BOOKED) {
                                                         AppColor.busyTabTextColor
                                                     } else {
                                                         AppColor.freeTabTextColor
@@ -362,7 +363,7 @@ fun RoomScreen(
 
                                         // Title
                                         Text(
-                                            text = if (slot.status == SlotStatus.busy) {
+                                            text = if (slot.status == SlotStatus.BOOKED) {
                                                 slot.event?.title ?: "Belegt"
                                             } else {
                                                 "Frei"
