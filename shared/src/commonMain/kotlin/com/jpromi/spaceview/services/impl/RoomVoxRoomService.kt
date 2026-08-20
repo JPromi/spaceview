@@ -97,6 +97,8 @@ class RoomVoxRoomService(
             .let { bookings -> generateSlotsFromBookings(bookings, date) }
     }
 
+    override fun getLogoUrl(): String {
+        return "$effectiveServerUrl/apps/theming/image/logo"
     // get Room use for date
     override suspend fun getRoomUse(roomId: String, date: LocalDate): ApiResult<RoomUse> = executeRoomVoxRequest { client ->
         val from = LocalDateTime(date, LocalTime(0, 0))

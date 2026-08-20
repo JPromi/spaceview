@@ -9,6 +9,7 @@ androidx-core = "1.19.0"
 androidx-espresso = "3.7.0"
 androidx-lifecycle = "2.11.0-beta01"
 androidx-testExt = "1.3.0"
+coilNetworkKtor3 = "3.5.0"
 composeMultiplatform = "1.11.1"
 composeIcons = "2.2.1"
 junit = "4.13.2"
@@ -20,6 +21,9 @@ material3 = "1.11.0-alpha07"
 multiplatform-settings = "1.3.0"
 
 [libraries]
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilNetworkKtor3" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coilNetworkKtor3" }
+coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coilNetworkKtor3" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
