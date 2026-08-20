@@ -1,6 +1,5 @@
 package com.jpromi.spaceview
 
-import com.jpromi.spaceview.enums.CalendarProvider
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.get
 

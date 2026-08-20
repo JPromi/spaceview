@@ -29,8 +29,34 @@ import kotlinx.datetime.toLocalDateTime
 class RoomVoxRoomService(
     private val calendarSettings: CalendarSettings = CalendarSettings(),
 ) : RoomService {
+    private var configuredServerUrl: String? = null
+    private var configuredAccessToken: String? = null
+
+    private val effectiveServerUrl: String
+        get() = configuredServerUrl ?: calendarSettings.roomVoxServerUrl
+
+    private val effectiveAccessToken: String
+        get() = configuredAccessToken ?: calendarSettings.roomVoxAccessToken
+
     val baseUrl: String
-        get() = calendarSettings.roomVoxServerUrl.toHttpBaseUrl() + "/apps/roomvox/api/v1"
+        get() = effectiveServerUrl.toHttpBaseUrl() + "/apps/roomvox/api/v1"
+
+    override fun configure(
+        serverUrl: String,
+        accessToken: String,
+    ) {
+        configuredServerUrl = serverUrl
+        configuredAccessToken = accessToken
+    }
+
+    // check connection
+    override suspend fun checkCredentials(): ApiResult<String> = executeRoomVoxRequest { client ->
+        client.get("${baseUrl}/rooms") {
+            addAuthorizationHeader()
+        }
+            .body<List<RVRoomDTO>>()
+        ""
+    }
 
     // get Rooms
     override suspend fun getRooms(): ApiResult<List<Room>> = executeRoomVoxRequest { client ->
@@ -274,14 +300,14 @@ class RoomVoxRoomService(
     private suspend fun <T> executeRoomVoxRequest(request: suspend (HttpClient) -> T): ApiResult<T> =
         executeRequest(
             invalidRequestMessage = "Bitte Server-URL eingeben.",
-            isRequestValid = { calendarSettings.roomVoxServerUrl.isNotBlank() },
+            isRequestValid = { effectiveServerUrl.isNotBlank() },
             request = request,
         )
 
     // Authorization logik
     private fun HttpRequestBuilder.addAuthorizationHeader() {
-        if (calendarSettings.roomVoxAccessToken.isNotBlank()) {
-            bearerAuth(calendarSettings.roomVoxAccessToken.trim())
+        if (effectiveAccessToken.isNotBlank()) {
+            bearerAuth(effectiveAccessToken.trim())
         }
     }
 }

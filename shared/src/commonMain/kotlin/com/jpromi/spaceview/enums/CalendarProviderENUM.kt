@@ -1,6 +1,6 @@
 package com.jpromi.spaceview.enums
 
-enum class CalendarProvider {
+enum class CalendarProviderENUM {
     ROOMVOX,
     DEMO
 }

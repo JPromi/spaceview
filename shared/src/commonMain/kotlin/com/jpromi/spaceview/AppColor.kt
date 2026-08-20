@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 object AppColor {
     val background = Color(0xff05152C)
+    val primary = Color(0xff2563eb)
     val textColor = Color(0xffffffff)
     val slotBackground = Color(0x20f5f5f5)
 
@@ -12,4 +13,7 @@ object AppColor {
 
     val busyTagBackground = Color(0xfff44336)
     val busyTabTextColor = Color(0xfff5f5f5)
+
+    val backgroundSettings = Color(0x15f5f5f5)
+    val borderSettings = Color(0x30f5f5f5)
 }
