@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.composables.icons.lucide.CircleCheck
+import com.composables.icons.lucide.CircleX
+import com.composables.icons.lucide.Lucide
 import com.jpromi.spaceview.AppColor
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
@@ -40,6 +44,7 @@ import com.jpromi.spaceview.models.CalendarProvider
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.services.RoomService
+import com.jpromi.spaceview.services.impl.DemoRoomService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import kotlinx.coroutines.launch
 
@@ -48,8 +53,9 @@ fun ConfigurationScreen(
     onGoBack: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
     calendarSettings: CalendarSettings = remember { CalendarSettings() },
-    roomService: RoomService = remember { RoomVoxRoomService(calendarSettings) },
 ) {
+    var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
+
     var selectedProvider by remember {
         mutableStateOf(calendarSettings.calendarProvider ?: CalendarProviderENUM.DEMO)
     }
@@ -73,6 +79,17 @@ fun ConfigurationScreen(
     var isLoadingRooms by remember { mutableStateOf(false) }
     var loadRoomsMessage by remember { mutableStateOf<String?>(null) }
 
+    fun initRoomService() {
+        when (selectedProvider) {
+            CalendarProviderENUM.ROOMVOX -> {
+                roomService = RoomVoxRoomService()
+            }
+            else -> {
+                roomService = DemoRoomService()
+            }
+        }
+    }
+
     fun loadRooms() {
         roomService.configure(
             serverUrl = selectedRoomVoxServerUrl,
@@ -87,7 +104,7 @@ fun ConfigurationScreen(
                 is ApiResult.Success -> {
                     loadedRooms = result.data
                     if (loadedRooms.none { it.id == selectedRoomId }) {
-                        selectedRoomId = ""
+                        selectedRoomId = loadedRooms.firstOrNull()?.id.orEmpty()
                     }
                     loadRoomsMessage = "${loadedRooms.size} Räume geladen"
                 }
@@ -165,6 +182,7 @@ fun ConfigurationScreen(
 
     // on open
     LaunchedEffect(Unit) {
+        initRoomService()
         checkConnection()
     }
 
@@ -206,7 +224,15 @@ fun ConfigurationScreen(
                 selectedOption = providers.find { it.id == selectedProvider },
                 optionText = { it.name },
                 onOptionSelected = { provider ->
+                    remoteServerConnectionMessage = null
+                    remoteServerConnection = false
+                    loadedRooms = emptyList()
                     selectedProvider = provider.id
+                    initRoomService()
+
+                    if (selectedProvider == CalendarProviderENUM.DEMO) {
+                        checkConnection()
+                    }
                 }
             )
 
@@ -230,6 +256,8 @@ fun ConfigurationScreen(
                             onValueChange = {
                                 selectedRoomVoxServerUrl = it
                                 remoteServerConnectionMessage = null
+                                remoteServerConnection = false
+                                loadedRooms = emptyList()
                             },
                             keyboardType = KeyboardType.Uri
                         )
@@ -240,6 +268,8 @@ fun ConfigurationScreen(
                             onValueChange = {
                                 selectedRoomVoxToken = it
                                 remoteServerConnectionMessage = null
+                                remoteServerConnection = false
+                                loadedRooms = emptyList()
                             },
                             keyboardType = KeyboardType.Text
                         )
@@ -247,20 +277,49 @@ fun ConfigurationScreen(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (remoteServerConnectionMessage != null) {
-                                Text(
-                                    text = remoteServerConnectionMessage!!
-                                )
+                                Row (
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (remoteServerConnection) {
+                                        Icon(
+                                            imageVector = Lucide.CircleCheck,
+                                            contentDescription = null,
+                                            tint = AppColor.textColorGreen,
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Lucide.CircleX,
+                                            contentDescription = null,
+                                            tint = AppColor.textColorRed,
+                                        )
+                                    }
+
+
+                                    Text(
+                                        text = remoteServerConnectionMessage!!,
+                                        color =
+                                            if(remoteServerConnection) {
+                                                AppColor.textColorGreen
+                                            } else {
+                                                AppColor.textColorRed
+                                            },
+                                    )
+                                }
                             } else {
-                                Text("")
+                                Spacer(
+                                    modifier = Modifier
+                                )
                             }
 
                             SettingsButton(
                                 text = if (isCheckingRoomVoxConnection) {
-                                    "Pruefe..."
+                                    "Prüfe..."
                                 } else {
-                                    "Verbindung pruefen"
+                                    "Prüfen"
                                 },
                                 enabled = !isCheckingRoomVoxConnection,
                                 onClick = { checkConnection() },
@@ -290,7 +349,8 @@ fun ConfigurationScreen(
             SettingsDropdown(
                 label = "Raum auswählen",
                 options = loadedRooms,
-                selectedOption = loadedRooms.find { it.id == selectedRoomId },
+                selectedOption = loadedRooms.find { it.id == selectedRoomId }
+                    ?: loadedRooms.firstOrNull(),
                 optionText = { room -> room.name },
                 onOptionSelected = { room ->
                     selectedRoomId = room.id
@@ -301,9 +361,19 @@ fun ConfigurationScreen(
         }
 
         // Buttons
-        Row() {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End),
+        ) {
+            SettingsButton(
+                text = "Abbrechen",
+                onClick = { onGoBack() },
+                modifier = Modifier.width(200.dp),
+            )
+
             SettingsButton(
                 text = "Speichern",
+                isPrimary = true,
                 enabled = remoteServerConnection,
                 onClick = { save() },
                 modifier = Modifier.width(200.dp),
