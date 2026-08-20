@@ -12,7 +12,14 @@ class AppSettings(
             settings.putString(KEY_ADMIN_PIN, value)
         }
 
+    var fullscreen: Boolean
+        get() = settings.getBoolean(KEY_FULLSCREEN, false)
+        set(value) {
+            settings.putBoolean(KEY_FULLSCREEN, value)
+        }
+
     private companion object {
         const val KEY_ADMIN_PIN = "admin_pin"
+        const val KEY_FULLSCREEN = "selected_fullscreen"
     }
 }
