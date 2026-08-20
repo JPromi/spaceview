@@ -3,6 +3,7 @@ package com.jpromi.spaceview.elements.forms
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
@@ -59,6 +60,7 @@ fun SettingsTextInput(
         Text(
             text = label,
             color = AppColor.textColor,
+            modifier = Modifier.padding(start = 5.dp)
         )
 
         OutlinedTextField(

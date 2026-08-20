@@ -38,6 +38,8 @@ import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
+import com.jpromi.spaceview.elements.forms.SettingsSection
+import com.jpromi.spaceview.elements.forms.SettingsSwitch
 import com.jpromi.spaceview.elements.forms.SettingsTextInput
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.models.CalendarProvider
@@ -55,6 +57,7 @@ fun ConfigurationScreen(
     calendarSettings: CalendarSettings = remember { CalendarSettings() },
 ) {
     var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
+    val fullscreenController = LocalFullscreenController.current;
 
     var selectedProvider by remember {
         mutableStateOf(calendarSettings.calendarProvider ?: CalendarProviderENUM.DEMO)
@@ -67,6 +70,11 @@ fun ConfigurationScreen(
         mutableStateOf(calendarSettings.roomVoxAccessToken)
     }
     var isCheckingRoomVoxConnection by remember { mutableStateOf(false) }
+
+    var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
+    var showLogo by remember { mutableStateOf(calendarSettings.showLogo) }
+
+    var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
 
     // tmp
     val coroutineScope = rememberCoroutineScope()
@@ -84,6 +92,7 @@ fun ConfigurationScreen(
             CalendarProviderENUM.ROOMVOX -> {
                 roomService = RoomVoxRoomService()
             }
+
             else -> {
                 roomService = DemoRoomService()
             }
@@ -108,6 +117,7 @@ fun ConfigurationScreen(
                     }
                     loadRoomsMessage = "${loadedRooms.size} Räume geladen"
                 }
+
                 else -> {
                     loadedRooms = emptyList()
                     loadRoomsMessage = "Räume konnten nicht geladen werden"
@@ -145,6 +155,7 @@ fun ConfigurationScreen(
                     loadRooms()
                     "Verbunden"
                 }
+
                 is ApiResult.Unauthorized -> "Token falsch"
                 is ApiResult.NetworkError -> "Network error"
                 is ApiResult.NotFound -> "Not found"
@@ -176,6 +187,14 @@ fun ConfigurationScreen(
             calendarSettings.selectedRoomId = ""
         }
 
+        calendarSettings.showAddEvent = showAddEvent;
+        calendarSettings.showLogo = showLogo
+
+        if(appSettings.fullscreen != fullscreen)
+            fullscreenController?.setFullscreen(fullscreen);
+
+        appSettings.fullscreen = fullscreen;
+
         // leave
         onGoBack()
     }
@@ -194,19 +213,8 @@ fun ConfigurationScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColor.backgroundSettings, shape = RoundedCornerShape(12.dp))
-                .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Provider",
-                color = AppColor.textColor
-            )
-
+        SettingsSection(title = "Provider")
+        {
             val providers: List<CalendarProvider> = listOf(
                 CalendarProvider(
                     id = CalendarProviderENUM.DEMO,
@@ -238,18 +246,8 @@ fun ConfigurationScreen(
 
             when (selectedProvider) {
                 CalendarProviderENUM.ROOMVOX -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Text(
-                            text = "RoomVox (Nextcloud) Provider",
-                            color = AppColor.textColor
-                        )
-
+                    SettingsSection(title = "RoomVox (Nextcloud) Provider", transparentBackground = true)
+                    {
                         SettingsTextInput(
                             label = "Server",
                             value = selectedRoomVoxServerUrl,
@@ -280,7 +278,7 @@ fun ConfigurationScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (remoteServerConnectionMessage != null) {
-                                Row (
+                                Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
@@ -302,7 +300,7 @@ fun ConfigurationScreen(
                                     Text(
                                         text = remoteServerConnectionMessage!!,
                                         color =
-                                            if(remoteServerConnection) {
+                                            if (remoteServerConnection) {
                                                 AppColor.textColorGreen
                                             } else {
                                                 AppColor.textColorRed
@@ -333,19 +331,8 @@ fun ConfigurationScreen(
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColor.backgroundSettings, shape = RoundedCornerShape(12.dp))
-                .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Kalender",
-                color = AppColor.textColor
-            )
-
+        SettingsSection(title = "Kalendar")
+        {
             SettingsDropdown(
                 label = "Raum auswählen",
                 options = loadedRooms,
@@ -357,7 +344,33 @@ fun ConfigurationScreen(
                 }
             )
 
+            SettingsSwitch(
+                checked = showAddEvent,
+                onCheckedChange = {
+                    showAddEvent = it
+                },
+                text = "Hinzufügen anzeigen",
+            )
+
+            SettingsSwitch(
+                checked = showLogo,
+                onCheckedChange = {
+                    showLogo = it
+                },
+                text = "Logo anzeigen",
+            )
+
             // allow edit
+        }
+
+        SettingsSection(title = "Applikation") {
+            SettingsSwitch(
+                checked = fullscreen,
+                onCheckedChange = {
+                    fullscreen = it
+                },
+                text = "Fullscreen",
+            )
         }
 
         // Buttons
