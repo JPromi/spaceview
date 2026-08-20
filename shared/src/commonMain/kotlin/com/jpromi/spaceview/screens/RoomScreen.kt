@@ -89,6 +89,7 @@ fun RoomScreen(
             CalendarProviderENUM.ROOMVOX -> {
                 roomService = RoomVoxRoomService()
             }
+
             else -> {
                 roomService = DemoRoomService()
             }
@@ -265,13 +266,17 @@ fun RoomScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
+                    //Logo
                     Box()
                     {
-                        AsyncImage(
-                            model = roomService.getLogoUrl(), // works whether it resolves to .png or .svg
-                            contentDescription = "Logo",
-                            modifier = Modifier.fillMaxHeight()
-                        )
+                        if (calendarSettings.showLogo) {
+
+                            AsyncImage(
+                                model = roomService.getLogoUrl(), // works whether it resolves to .png or .svg
+                                contentDescription = "Logo",
+                                modifier = Modifier.fillMaxHeight()
+                            )
+                        }
                     }
 
                     // Settings
