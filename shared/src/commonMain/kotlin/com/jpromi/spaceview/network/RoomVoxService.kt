@@ -1,9 +1,8 @@
 package com.jpromi.spaceview.network
 
 import com.jpromi.spaceview.AppSettings
-import com.jpromi.spaceview.models.Room
-import com.jpromi.spaceview.models.RoomAvailability
-import com.jpromi.spaceview.models.RoomStatus
+import com.jpromi.spaceview.dtos.roomvox.RoomAvailability
+import com.jpromi.spaceview.dtos.roomvox.RoomStatus
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
@@ -19,13 +18,13 @@ class RoomVoxService(
     val baseUrl: String
         get() = appSettings.serverUrl.toHttpBaseUrl() + "/apps/roomvox/api/v1"
 
-    suspend fun getRooms(): ApiResult<List<Room>> = executeRequest { client ->
+    suspend fun getRooms(): ApiResult<List<`RoomVox.Room`>> = executeRequest { client ->
         client.get("$baseUrl/rooms") {
             addAuthorizationHeader()
         }.body()
     }
 
-    suspend fun getRoom(roomId: String): ApiResult<Room> {
+    suspend fun getRoom(roomId: String): ApiResult<`RoomVox.Room`> {
         if (roomId.isBlank()) {
             return ApiResult.InvalidRequest("Bitte zuerst einen Raum auswählen.")
         }

@@ -1,25 +1,25 @@
-package com.jpromi.spaceview.models
+package com.jpromi.spaceview.dtos.roomvox
 
 import com.jpromi.spaceview.enums.SlotStatus
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 @Serializable
-data class RoomAvailability(
-    var room: AvailabilityRoom,
+data class RVRoomAvailabilityDTO(
+    var room: RVAvailabilityRoomDTO,
     var date: String,
     var availabilityRules: JsonElement? = null,
-    var slots: List<AvailabilitySlot>,
+    var slots: List<RVAvailabilitySlotDTO>,
 )
 
 @Serializable
-data class AvailabilityRoom(
+data class RVAvailabilityRoomDTO(
     var id: String,
     var name: String,
 )
 
 @Serializable
-data class AvailabilitySlot(
+data class RVAvailabilitySlotDTO(
     var start: String,
     var end: String,
     var status: SlotStatus,

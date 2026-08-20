@@ -1,19 +1,19 @@
-package com.jpromi.spaceview.models
+package com.jpromi.spaceview.dtos.roomvox
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class RoomStatus(
-    var room: Room,
+data class RVRoomStatusDTO(
+    var room: RVRoomDTO,
     var status: String,
-    var currentBooking: CurrentRoomBooking? = null,
-    var nextBooking: CurrentRoomBooking? = null,
+    var currentBooking: RVCurrentRoomBookingDTO? = null,
+    var nextBooking: RVCurrentRoomBookingDTO? = null,
     var freeUntil: String? = null,
-    var todayBookings: List<TodayRoomBooking> = emptyList(),
+    var todayBookings: List<RVTodayRoomBookingDTO> = emptyList(),
 )
 
 @Serializable
-data class CurrentRoomBooking(
+data class RVCurrentRoomBookingDTO(
     var title: String,
     var organizer: String,
     var start: String,
@@ -22,7 +22,7 @@ data class CurrentRoomBooking(
 )
 
 @Serializable
-data class TodayRoomBooking(
+data class RVTodayRoomBookingDTO(
     var title: String,
     var start: String,
     var end: String,

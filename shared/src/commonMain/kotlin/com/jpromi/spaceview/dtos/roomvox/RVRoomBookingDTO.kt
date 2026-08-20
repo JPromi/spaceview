@@ -1,21 +1,20 @@
-package com.jpromi.spaceview.models
+package com.jpromi.spaceview.dtos.roomvox
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
-data class RoomBooking(
+data class RVRoomBookingDTO(
     var uid: String,
     var title: String,
     var start: String,
     var end: String,
     var organizer: String,
     var status: String,
-    var room: BookingRoom,
+    var room: RVBookingRoomDTO,
 )
 
 @Serializable
-data class BookingRoom(
+data class RVBookingRoomDTO(
     var id: String,
     var name: String,
 )

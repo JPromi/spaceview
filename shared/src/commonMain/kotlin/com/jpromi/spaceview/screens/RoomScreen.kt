@@ -33,10 +33,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -47,9 +45,8 @@ import com.jpromi.spaceview.AppColor
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.enums.SlotStatus
-import com.jpromi.spaceview.models.Room
-import com.jpromi.spaceview.models.RoomAvailability
-import com.jpromi.spaceview.models.RoomStatus
+import com.jpromi.spaceview.dtos.roomvox.RoomAvailability
+import com.jpromi.spaceview.dtos.roomvox.RoomStatus
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.RoomVoxService
 import com.jpromi.spaceview.network.toUserMessage
