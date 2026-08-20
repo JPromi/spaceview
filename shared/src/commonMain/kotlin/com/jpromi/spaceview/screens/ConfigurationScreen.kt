@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.dtos.roomvox.RVRoomDTO
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.RoomVoxService
 import com.jpromi.spaceview.network.ServerConnectionResult
@@ -45,7 +46,7 @@ fun ConfigurationScreen(
     var selectedRoomId by remember { mutableStateOf(appSettings.selectedRoomId) }
     val coroutineScope = rememberCoroutineScope()
 
-    val rooms = remember { mutableStateListOf<`RoomVox.Room`>() }
+    val rooms = remember { mutableStateListOf<RVRoomDTO>() }
 
     Column(
         modifier = Modifier

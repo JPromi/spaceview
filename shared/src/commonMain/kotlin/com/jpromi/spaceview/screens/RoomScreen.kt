@@ -43,10 +43,10 @@ import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Settings
 import com.jpromi.spaceview.AppColor
 import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
+import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.enums.SlotStatus
-import com.jpromi.spaceview.dtos.roomvox.RoomAvailability
-import com.jpromi.spaceview.dtos.roomvox.RoomStatus
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.RoomVoxService
 import com.jpromi.spaceview.network.toUserMessage
@@ -61,8 +61,8 @@ fun RoomScreen(
     appSettings: AppSettings = remember { AppSettings() },
     roomVoxService: RoomVoxService = remember { RoomVoxService(appSettings) },
 ) {
-    var roomStatus by remember { mutableStateOf<RoomStatus?>(null) }
-    var roomAvailability by remember { mutableStateOf<RoomAvailability?>(null) }
+    var roomStatus by remember { mutableStateOf<RVRoomStatusDTO?>(null) }
+    var roomAvailability by remember { mutableStateOf<RVRoomAvailabilityDTO?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoadingRoom by remember { mutableStateOf(true) }
     var isLoadingAvailability by remember { mutableStateOf(true) }

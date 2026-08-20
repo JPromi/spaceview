@@ -1,8 +1,9 @@
 package com.jpromi.spaceview.network
 
 import com.jpromi.spaceview.AppSettings
-import com.jpromi.spaceview.dtos.roomvox.RoomAvailability
-import com.jpromi.spaceview.dtos.roomvox.RoomStatus
+import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
+import com.jpromi.spaceview.dtos.roomvox.RVRoomDTO
+import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
@@ -18,13 +19,13 @@ class RoomVoxService(
     val baseUrl: String
         get() = appSettings.serverUrl.toHttpBaseUrl() + "/apps/roomvox/api/v1"
 
-    suspend fun getRooms(): ApiResult<List<`RoomVox.Room`>> = executeRequest { client ->
+    suspend fun getRooms(): ApiResult<List<RVRoomDTO>> = executeRequest { client ->
         client.get("$baseUrl/rooms") {
             addAuthorizationHeader()
         }.body()
     }
 
-    suspend fun getRoom(roomId: String): ApiResult<`RoomVox.Room`> {
+    suspend fun getRoom(roomId: String): ApiResult<RVRoomDTO> {
         if (roomId.isBlank()) {
             return ApiResult.InvalidRequest("Bitte zuerst einen Raum auswählen.")
         }
@@ -36,7 +37,7 @@ class RoomVoxService(
         }
     }
 
-    suspend fun getRoomStatus(roomId: String): ApiResult<RoomStatus> {
+    suspend fun getRoomStatus(roomId: String): ApiResult<RVRoomStatusDTO> {
         if (roomId.isBlank()) {
             return ApiResult.InvalidRequest("Bitte zuerst einen Raum auswählen.")
         }
@@ -48,7 +49,7 @@ class RoomVoxService(
         }
     }
 
-    suspend fun getRoomAvailability(roomId: String): ApiResult<RoomAvailability> {
+    suspend fun getRoomAvailability(roomId: String): ApiResult<RVRoomAvailabilityDTO> {
         if (roomId.isBlank()) {
             return ApiResult.InvalidRequest("Bitte zuerst einen Raum auswählen.")
         }
