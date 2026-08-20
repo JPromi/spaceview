@@ -6,14 +6,13 @@ import kotlinx.serialization.Serializable
 data class Room(
     var id: String,
     var name: String,
-    var email: String,
-    var capacity: Int,
-    var roomNumber: String,
-    var roomType: String,
+    var description: String?,
+    var email: String?,
+    var capacity: Int?,
+    var roomNumber: String?,
+    var roomType: String?,
     var facilities: List<String>,
-    var description: String,
-    var responsibleContact: String,
-    var location: String,
-    var autoAccept: Boolean,
+    var location: String?,
     var active: Boolean,
+    // ToDo: Rules (Opening times...)
 )

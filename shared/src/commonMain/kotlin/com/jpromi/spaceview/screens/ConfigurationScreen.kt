@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -24,28 +27,32 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
+import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
-import com.jpromi.spaceview.network.RoomVoxService
 import com.jpromi.spaceview.network.ServerConnectionResult
 import com.jpromi.spaceview.network.toUserMessage
+import com.jpromi.spaceview.services.RoomService
+import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import kotlinx.coroutines.launch
 
 @Composable
 fun ConfigurationScreen(
     onGoBack: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
-    roomVoxService: RoomVoxService = remember { RoomVoxService(appSettings) },
+    calendarSettings: CalendarSettings = remember { CalendarSettings() },
+    roomService: RoomService = remember { RoomVoxRoomService(calendarSettings) },
 ) {
-    var serverUrl by remember { mutableStateOf(appSettings.serverUrl) }
-    var accessToken by remember { mutableStateOf(appSettings.accessToken) }
+    var serverUrl by remember { mutableStateOf(calendarSettings.roomVoxServerUrl) }
+    var accessToken by remember { mutableStateOf(calendarSettings.roomVoxAccessToken) }
     var serverCheckResult by remember { mutableStateOf<ServerConnectionResult?>(null) }
     var isCheckingServer by remember { mutableStateOf(false) }
     var isRoomMenuExpanded by remember { mutableStateOf(false) }
-    var selectedRoomId by remember { mutableStateOf(appSettings.selectedRoomId) }
+    var selectedRoomId by remember { mutableStateOf(calendarSettings.selectedRoomId) }
     val coroutineScope = rememberCoroutineScope()
 
     val rooms = remember { mutableStateListOf<Room>() }
@@ -54,6 +61,7 @@ fun ConfigurationScreen(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Text("Konfiguration")
 
@@ -63,7 +71,7 @@ fun ConfigurationScreen(
             value = serverUrl,
             onValueChange = {
                 serverUrl = it
-                appSettings.serverUrl = it
+                calendarSettings.roomVoxServerUrl = it
                 serverCheckResult = null
             },
             modifier = Modifier.fillMaxWidth(),
@@ -77,7 +85,7 @@ fun ConfigurationScreen(
             value = accessToken,
             onValueChange = {
                 accessToken = it
-                appSettings.accessToken = it
+                calendarSettings.roomVoxAccessToken = it
                 serverCheckResult = null
             },
             modifier = Modifier.fillMaxWidth(),
@@ -92,13 +100,13 @@ fun ConfigurationScreen(
                 coroutineScope.launch {
                     isCheckingServer = true
                     serverCheckResult = null
-                    serverCheckResult = when (val result = roomVoxService.getRooms()) {
+                    serverCheckResult = when (val result = roomService.getRooms()) {
                         is ApiResult.Success -> {
                             rooms.clear()
                             rooms.addAll(result.data)
                             if (rooms.none { it.id == selectedRoomId }) {
                                 selectedRoomId = ""
-                                appSettings.selectedRoomId = ""
+                                calendarSettings.selectedRoomId = ""
                             }
                             ServerConnectionResult.Success(
                                 "Verbindung OK. ${rooms.size} Räume gefunden."
@@ -154,7 +162,7 @@ fun ConfigurationScreen(
                             text = { Text("${room.name} (ID: ${room.id})") },
                             onClick = {
                                 selectedRoomId = room.id
-                                appSettings.selectedRoomId = room.id
+                                calendarSettings.selectedRoomId = room.id
                                 isRoomMenuExpanded = false
                             },
                         )
@@ -166,13 +174,13 @@ fun ConfigurationScreen(
         }
 
         // settings
-        var showAddEvent by remember { mutableStateOf(appSettings.showAddEvent) }
+        var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
 
         Switch(
             checked = showAddEvent,
             onCheckedChange = {
                 showAddEvent = it
-                appSettings.showAddEvent = it
+                calendarSettings.showAddEvent = it
             },
         )
         Text("Show Add Event")
@@ -197,15 +205,32 @@ fun ConfigurationScreen(
 
         // Admin Pin configuration
         var adminPin by remember { mutableStateOf(appSettings.adminPin) }
+        val isAdminPinValid = adminPin.isEmpty() || adminPin.length == 4
 
         OutlinedTextField(
             value = adminPin,
-            onValueChange = {
-                adminPin = it
-                appSettings.adminPin = it
+            onValueChange = { value ->
+                val sanitizedValue = value
+                    .filter { it.isDigit() }
+                    .take(4)
+
+                adminPin = sanitizedValue
+
+                if (sanitizedValue.isEmpty() || sanitizedValue.length == 4) {
+                    appSettings.adminPin = sanitizedValue
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Admin PIN") },
+            supportingText = {
+                if (!isAdminPinValid) {
+                    Text("PIN muss leer oder 4-stellig sein")
+                }
+            },
+            isError = !isAdminPinValid,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.NumberPassword
+            ),
             singleLine = true,
         )
 
