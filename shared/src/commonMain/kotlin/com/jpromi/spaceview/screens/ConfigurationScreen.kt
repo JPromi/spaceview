@@ -42,6 +42,8 @@ import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
+import com.jpromi.spaceview.elements.forms.SettingsSection
+import com.jpromi.spaceview.elements.forms.SettingsSwitch
 import com.jpromi.spaceview.elements.forms.SettingsTextInput
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.models.CalendarProvider
@@ -59,6 +61,7 @@ fun ConfigurationScreen(
     calendarSettings: CalendarSettings = remember { CalendarSettings() },
 ) {
     var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
+    val fullscreenController = LocalFullscreenController.current;
 
     var selectedProvider by remember {
         mutableStateOf(calendarSettings.calendarProvider ?: CalendarProviderENUM.DEMO)
@@ -71,6 +74,11 @@ fun ConfigurationScreen(
         mutableStateOf(calendarSettings.roomVoxAccessToken)
     }
     var isCheckingRoomVoxConnection by remember { mutableStateOf(false) }
+
+    var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
+    var showLogo by remember { mutableStateOf(calendarSettings.showLogo) }
+
+    var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
 
     // tmp
     val coroutineScope = rememberCoroutineScope()
@@ -88,6 +96,7 @@ fun ConfigurationScreen(
             CalendarProviderENUM.ROOMVOX -> {
                 roomService = RoomVoxRoomService()
             }
+
             else -> {
                 roomService = DemoRoomService()
             }
@@ -112,6 +121,7 @@ fun ConfigurationScreen(
                     }
                     loadRoomsMessage = "${loadedRooms.size} Räume geladen"
                 }
+
                 else -> {
                     loadedRooms = emptyList()
                     loadRoomsMessage = "Räume konnten nicht geladen werden"
@@ -149,6 +159,7 @@ fun ConfigurationScreen(
                     loadRooms()
                     "Verbunden"
                 }
+
                 is ApiResult.Unauthorized -> "Token falsch"
                 is ApiResult.NetworkError -> "Network error"
                 is ApiResult.NotFound -> "Not found"
@@ -179,6 +190,14 @@ fun ConfigurationScreen(
         } else {
             calendarSettings.selectedRoomId = ""
         }
+
+        calendarSettings.showAddEvent = showAddEvent;
+        calendarSettings.showLogo = showLogo
+
+        if(appSettings.fullscreen != fullscreen)
+            fullscreenController?.setFullscreen(fullscreen);
+
+        appSettings.fullscreen = fullscreen;
 
         // leave
         onGoBack()
@@ -379,6 +398,16 @@ fun ConfigurationScreen(
 
                 // allow edit
             }
+        }
+
+        SettingsSection(title = "Applikation") {
+            SettingsSwitch(
+                checked = fullscreen,
+                onCheckedChange = {
+                    fullscreen = it
+                },
+                text = "Fullscreen",
+            )
         }
 
         // Buttons
