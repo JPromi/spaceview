@@ -2,6 +2,7 @@ package com.jpromi.spaceview
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -10,6 +11,9 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.jpromi.spaceview.controllers.FullscreenController
 import com.jpromi.spaceview.controllers.LocalFullscreenController
+import org.jetbrains.compose.resources.painterResource
+import spaceview.desktopapp.generated.resources.Res
+import spaceview.desktopapp.generated.resources.icon
 import java.awt.Dimension
 
 fun main() = application {
@@ -27,6 +31,7 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = "SpaceView",
+        icon = painterResource(Res.drawable.icon),
         resizable = true,
         state = windowState
     ) {
