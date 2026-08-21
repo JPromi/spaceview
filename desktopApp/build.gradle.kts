@@ -19,6 +19,10 @@ compose.desktop {
     application {
         mainClass = "com.jpromi.spaceview.MainKt"
 
+        buildTypes.release.proguard {
+            configurationFiles.from(project.file("proguard-rules.pro"))
+        }
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.jpromi.spaceview"
