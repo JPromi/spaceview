@@ -1,0 +1,2 @@
+-keep class io.ktor.serialization.kotlinx.KotlinxSerializationExtensionProvider { *; }
+-keep class io.ktor.serialization.kotlinx.json.KotlinxSerializationJsonExtensionProvider { *; }

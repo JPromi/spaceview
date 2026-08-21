@@ -46,3 +46,22 @@ jobs:
         with:
           name: release-msi
           path: desktopApp/build/compose/binaries/main-release/msi/*.msi
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gradle setup
+        uses: ./.github/actions/gradle-setup
+
+      - name: Build Release Dmg
+        run: ./gradlew :desktopApp:packageReleaseDmg
+
+      - name: Upload Release Dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dmg
+          path: desktopApp/build/compose/binaries/main-release/dmg/*.dmg
