@@ -400,14 +400,17 @@ fun ConfigurationScreen(
             }
         }
 
-        SettingsSection(title = "Applikation") {
-            SettingsSwitch(
-                checked = fullscreen,
-                onCheckedChange = {
-                    fullscreen = it
-                },
-                text = "Fullscreen",
-            )
+        // Application
+        item {
+            SettingsSection(title = "Applikation") {
+                SettingsSwitch(
+                    checked = fullscreen,
+                    onCheckedChange = {
+                        fullscreen = it
+                    },
+                    text = "Fullscreen",
+                )
+            }
         }
 
         // Buttons
