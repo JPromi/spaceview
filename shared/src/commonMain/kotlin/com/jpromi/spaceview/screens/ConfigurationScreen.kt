@@ -339,7 +339,8 @@ fun ConfigurationScreen(
                                     remoteServerConnection = false
                                     loadedRooms = emptyList()
                                 },
-                                keyboardType = KeyboardType.Text
+                                keyboardType = KeyboardType.Text,
+                                isPassword = true,
                             )
 
                             Row(
@@ -466,6 +467,7 @@ fun ConfigurationScreen(
                         },
                         keyboardType = KeyboardType.NumberPassword,
                         rules = adminPinRules,
+                        isPassword = true,
                     )
                 }
             }

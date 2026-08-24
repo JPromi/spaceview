@@ -6,13 +6,24 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.composables.icons.lucide.Eye
+import com.composables.icons.lucide.EyeOff
+import com.composables.icons.lucide.Lucide
 import com.jpromi.spaceview.AppColor
 
 data class TextInputRules(
@@ -52,9 +63,11 @@ fun SettingsTextInput(
     keyboardType: KeyboardType = KeyboardType.Text,
     singleLine: Boolean = true,
     placeholder: String? = null,
+    isPassword: Boolean = false,
 ) {
     val sanitizedValue = rules.sanitize(value)
     val isValid = rules.isValid(sanitizedValue)
+    var isPasswordVisible by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -83,6 +96,36 @@ fun SettingsTextInput(
                 }
             },
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            visualTransformation = if (isPassword && !isPasswordVisible) {
+                PasswordVisualTransformation()
+            } else {
+                VisualTransformation.None
+            },
+            trailingIcon = if (isPassword) {
+                {
+                    IconButton(
+                        onClick = {
+                            isPasswordVisible = !isPasswordVisible
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (isPasswordVisible) {
+                                Lucide.EyeOff
+                            } else {
+                                Lucide.Eye
+                            },
+                            contentDescription = if (isPasswordVisible) {
+                                "Passwort verbergen"
+                            } else {
+                                "Passwort anzeigen"
+                            },
+                            tint = AppColor.textColor,
+                        )
+                    }
+                }
+            } else {
+                null
+            },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = AppColor.textColor,
                 unfocusedTextColor = AppColor.textColor,
