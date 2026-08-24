@@ -45,6 +45,7 @@ import com.jpromi.spaceview.elements.forms.SettingsDropdown
 import com.jpromi.spaceview.elements.forms.SettingsSection
 import com.jpromi.spaceview.elements.forms.SettingsSwitch
 import com.jpromi.spaceview.elements.forms.SettingsTextInput
+import com.jpromi.spaceview.elements.forms.TextInputRules
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.models.CalendarProvider
 import com.jpromi.spaceview.models.Room
@@ -67,6 +68,7 @@ fun ConfigurationScreen(
         mutableStateOf(calendarSettings.calendarProvider ?: CalendarProviderENUM.DEMO)
     }
 
+    // RoomVox
     var selectedRoomVoxServerUrl by remember {
         mutableStateOf(calendarSettings.roomVoxServerUrl)
     }
@@ -75,10 +77,23 @@ fun ConfigurationScreen(
     }
     var isCheckingRoomVoxConnection by remember { mutableStateOf(false) }
 
+    // UI
     var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
     var showLogo by remember { mutableStateOf(calendarSettings.showLogo) }
 
     var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
+
+    // Admin
+    var adminPinActive by remember { mutableStateOf(appSettings.adminPin.isNotEmpty()) }
+    var adminPin by remember { mutableStateOf(appSettings.adminPin) }
+    val adminPinRules = remember {
+        TextInputRules(
+            regex = Regex("\\d{4}"),
+            maxLength = 4,
+            allowEmpty = false,
+            errorMessage = "PIN muss 4 Ziffern lang sein",
+        )
+    }
 
     // tmp
     val coroutineScope = rememberCoroutineScope()
@@ -172,6 +187,11 @@ fun ConfigurationScreen(
     }
 
     fun save() {
+        // validator
+        if (!(adminPinRules.isValid(adminPin) || !adminPinActive)) {
+            return
+        }
+
         // Calendar Settings
         calendarSettings.calendarProvider = selectedProvider
 
@@ -198,6 +218,13 @@ fun ConfigurationScreen(
 
         calendarSettings.showAddEvent = showAddEvent;
         calendarSettings.showLogo = showLogo
+
+        // Admin
+        if (adminPinActive) {
+            appSettings.adminPin = adminPin
+        } else {
+            appSettings.adminPin = ""
+        }
 
         if(appSettings.fullscreen != fullscreen)
             fullscreenController?.setFullscreen(fullscreen);
@@ -418,6 +445,33 @@ fun ConfigurationScreen(
             }
         }
 
+        // Admin
+        item {
+
+            SettingsSection(title = "Admin") {
+                SettingsSwitch(
+                    checked = adminPinActive,
+                    onCheckedChange = {
+                        adminPinActive = it
+                    },
+                    text = "Admin PIN",
+                )
+
+                if (adminPinActive) {
+                    SettingsTextInput(
+                        label = "Admin PIN",
+                        value = adminPin,
+                        onValueChange = {
+                            adminPin = it.filter(Char::isDigit).take(4)
+                        },
+                        keyboardType = KeyboardType.NumberPassword,
+                        rules = adminPinRules,
+                    )
+                }
+            }
+
+        }
+
         // Buttons
         item {
             Row(
@@ -433,7 +487,7 @@ fun ConfigurationScreen(
                 SettingsButton(
                     text = "Speichern",
                     isPrimary = true,
-                    enabled = remoteServerConnection,
+                    enabled = remoteServerConnection && (!adminPinActive || adminPinRules.isValid(adminPin)),
                     onClick = { save() },
                     modifier = Modifier.width(200.dp),
                 )
