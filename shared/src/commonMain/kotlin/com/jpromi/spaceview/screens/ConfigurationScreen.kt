@@ -185,7 +185,12 @@ fun ConfigurationScreen(
         }
 
         // set Room ID
-        if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
+        if (
+            selectedProvider in listOf(
+                CalendarProviderENUM.ROOMVOX,
+                CalendarProviderENUM.DEMO,
+            )
+        ) {
             calendarSettings.selectedRoomId = selectedRoomId
         } else {
             calendarSettings.selectedRoomId = ""
