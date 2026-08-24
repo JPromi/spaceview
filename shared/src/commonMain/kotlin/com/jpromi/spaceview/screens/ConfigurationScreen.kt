@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,11 +20,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,17 +36,24 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.composables.icons.lucide.Calendar
 import com.composables.icons.lucide.CircleCheck
 import com.composables.icons.lucide.CircleX
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Server
+import com.composables.icons.lucide.Settings
+import com.composables.icons.lucide.Shield
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
+import com.jpromi.spaceview.elements.forms.SettingsNavigationButton
 import com.jpromi.spaceview.elements.forms.SettingsSection
 import com.jpromi.spaceview.elements.forms.SettingsSwitch
 import com.jpromi.spaceview.elements.forms.SettingsTextInput
@@ -243,231 +255,330 @@ fun ConfigurationScreen(
 
     val scrollState = rememberLazyListState()
 
-    LazyColumn(
-        state = scrollState,
+    // Navigation Scrolling
+    val providerSectionIndex = 0
+    val calendarSectionIndex = 1
+    val applicationSectionIndex = 2
+    val adminSectionIndex = 3
+    val sectionIndices = remember {
+        listOf(
+            providerSectionIndex,
+            calendarSectionIndex,
+            applicationSectionIndex,
+            adminSectionIndex,
+        )
+    }
+    val activeSectionIndex by remember {
+        derivedStateOf {
+            val layoutInfo = scrollState.layoutInfo
+            val viewportAnchor = layoutInfo.viewportStartOffset + 96
+            val visibleSections = layoutInfo.visibleItemsInfo
+                .filter { item -> item.index in sectionIndices }
+
+            visibleSections
+                .lastOrNull { item -> item.offset <= viewportAnchor }
+                ?.index
+                ?: visibleSections.firstOrNull()?.index
+                ?: providerSectionIndex
+        }
+    }
+
+    fun scrollToSection(index: Int) {
+        coroutineScope.launch {
+            scrollState.animateScrollToItem(index)
+        }
+    }
+
+    Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.background)
-            .draggable(
-                orientation = Orientation.Vertical,
-                state = rememberDraggableState { delta ->
-                    coroutineScope.launch {
-                        scrollState.scrollBy(-delta)
-                    }
-                },
-            ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .background(AppTheme.background),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        // Sidebar
+        Column {
+            // Title
+            Text(
+                text = "Einstellungen",
+                modifier = Modifier
+                    .padding(start = 16.dp, top = 16.dp),
+                color = AppTheme.textColor.copy(alpha = .75f),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+            )
 
-        // Provider
-        item {
-            SettingsSection(
-                title = "Provider"
+            // Navigation
+            LazyColumn(
+                modifier = Modifier
+                    .width(250.dp)
+                    .fillMaxHeight(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
-                val providers: List<CalendarProvider> = listOf(
-                    CalendarProvider(
-                        id = CalendarProviderENUM.DEMO,
-                        name = "Demo"
-                    ),
-                    CalendarProvider(
-                        id = CalendarProviderENUM.ROOMVOX,
-                        name = "RoomVox"
-                    ),
-                )
-
-                SettingsDropdown(
-                    label = "Provider auswaehlen",
-                    options = providers,
-                    selectedOption = providers.find { it.id == selectedProvider },
-                    optionText = { it.name },
-                    onOptionSelected = { provider ->
-                        remoteServerConnectionMessage = null
-                        remoteServerConnection = false
-                        loadedRooms = emptyList()
-                        selectedProvider = provider.id
-                        initRoomService()
-
-                        if (selectedProvider == CalendarProviderENUM.DEMO) {
-                            checkConnection()
-                        }
-                    }
-                )
-
-                when (selectedProvider) {
-                    CalendarProviderENUM.ROOMVOX -> {
-                        SettingsSection(
-                            title = "RoomVox Provider",
-                            transparentBackground = true
-                        ) {
-
-                            SettingsTextInput(
-                                label = "Server",
-                                value = selectedRoomVoxServerUrl,
-                                onValueChange = {
-                                    selectedRoomVoxServerUrl = it
-                                    remoteServerConnectionMessage = null
-                                    remoteServerConnection = false
-                                    loadedRooms = emptyList()
-                                },
-                                keyboardType = KeyboardType.Uri
-                            )
-
-                            SettingsTextInput(
-                                label = "Token",
-                                value = selectedRoomVoxToken,
-                                onValueChange = {
-                                    selectedRoomVoxToken = it
-                                    remoteServerConnectionMessage = null
-                                    remoteServerConnection = false
-                                    loadedRooms = emptyList()
-                                },
-                                keyboardType = KeyboardType.Text,
-                                isPassword = true,
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                if (remoteServerConnectionMessage != null) {
-                                    Row (
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        if (remoteServerConnection) {
-                                            Icon(
-                                                imageVector = Lucide.CircleCheck,
-                                                contentDescription = null,
-                                                tint = AppTheme.textColorGreen,
-                                            )
-                                        } else {
-                                            Icon(
-                                                imageVector = Lucide.CircleX,
-                                                contentDescription = null,
-                                                tint = AppTheme.textColorRed,
-                                            )
-                                        }
-
-
-                                        Text(
-                                            text = remoteServerConnectionMessage!!,
-                                            color =
-                                                if(remoteServerConnection) {
-                                                    AppTheme.textColorGreen
-                                                } else {
-                                                    AppTheme.textColorRed
-                                                },
-                                        )
-                                    }
-                                } else {
-                                    Spacer(
-                                        modifier = Modifier
-                                    )
-                                }
-
-                                SettingsButton(
-                                    text = if (isCheckingRoomVoxConnection) {
-                                        "Prüfe..."
-                                    } else {
-                                        "Prüfen"
-                                    },
-                                    enabled = !isCheckingRoomVoxConnection,
-                                    onClick = { checkConnection() },
-                                    modifier = Modifier.width(200.dp),
-                                )
-                            }
-                        }
-                    }
-
-                    else -> Unit
+                item {
+                    SettingsNavigationButton(
+                        text = "Provider",
+                        icon = Lucide.Server,
+                        isActive = activeSectionIndex == providerSectionIndex,
+                        onClick = { scrollToSection(providerSectionIndex) },
+                    )
+                }
+                item {
+                    SettingsNavigationButton(
+                        text = "Kalender",
+                        icon = Lucide.Calendar,
+                        isActive = activeSectionIndex == calendarSectionIndex,
+                        onClick = { scrollToSection(calendarSectionIndex) },
+                    )
+                }
+                item {
+                    SettingsNavigationButton(
+                        text = "Applikation",
+                        icon = Lucide.Settings,
+                        isActive = activeSectionIndex == applicationSectionIndex,
+                        onClick = { scrollToSection(applicationSectionIndex) },
+                    )
+                }
+                item {
+                    SettingsNavigationButton(
+                        text = "Admin",
+                        icon = Lucide.Shield,
+                        isActive = activeSectionIndex == adminSectionIndex,
+                        onClick = { scrollToSection(adminSectionIndex) },
+                    )
                 }
             }
         }
 
-        // Calendar
-        item {
-            SettingsSection(
-                title = "Kalender"
-            ) {
+        VerticalDivider()
 
-                SettingsDropdown(
-                    label = "Raum auswählen",
-                    options = loadedRooms,
-                    selectedOption = loadedRooms.find { it.id == selectedRoomId }
-                        ?: loadedRooms.firstOrNull(),
-                    optionText = { room -> room.name },
-                    onOptionSelected = { room ->
-                        selectedRoomId = room.id
+        // Settings
+        LazyColumn(
+            state = scrollState,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        coroutineScope.launch {
+                            scrollState.scrollBy(-delta)
+                        }
+                    },
+                ),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+
+            // Provider
+            item {
+                SettingsSection(
+                    title = "Provider"
+                ) {
+
+                    val providers: List<CalendarProvider> = listOf(
+                        CalendarProvider(
+                            id = CalendarProviderENUM.DEMO,
+                            name = "Demo"
+                        ),
+                        CalendarProvider(
+                            id = CalendarProviderENUM.ROOMVOX,
+                            name = "RoomVox"
+                        ),
+                    )
+
+                    SettingsDropdown(
+                        label = "Provider auswaehlen",
+                        options = providers,
+                        selectedOption = providers.find { it.id == selectedProvider },
+                        optionText = { it.name },
+                        onOptionSelected = { provider ->
+                            remoteServerConnectionMessage = null
+                            remoteServerConnection = false
+                            loadedRooms = emptyList()
+                            selectedProvider = provider.id
+                            initRoomService()
+
+                            if (selectedProvider == CalendarProviderENUM.DEMO) {
+                                checkConnection()
+                            }
+                        }
+                    )
+
+                    when (selectedProvider) {
+                        CalendarProviderENUM.ROOMVOX -> {
+                            SettingsSection(
+                                title = "RoomVox Provider",
+                                transparentBackground = true
+                            ) {
+
+                                SettingsTextInput(
+                                    label = "Server",
+                                    value = selectedRoomVoxServerUrl,
+                                    onValueChange = {
+                                        selectedRoomVoxServerUrl = it
+                                        remoteServerConnectionMessage = null
+                                        remoteServerConnection = false
+                                        loadedRooms = emptyList()
+                                    },
+                                    keyboardType = KeyboardType.Uri
+                                )
+
+                                SettingsTextInput(
+                                    label = "Token",
+                                    value = selectedRoomVoxToken,
+                                    onValueChange = {
+                                        selectedRoomVoxToken = it
+                                        remoteServerConnectionMessage = null
+                                        remoteServerConnection = false
+                                        loadedRooms = emptyList()
+                                    },
+                                    keyboardType = KeyboardType.Text,
+                                    isPassword = true,
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (remoteServerConnectionMessage != null) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
+                                            if (remoteServerConnection) {
+                                                Icon(
+                                                    imageVector = Lucide.CircleCheck,
+                                                    contentDescription = null,
+                                                    tint = AppTheme.textColorGreen,
+                                                )
+                                            } else {
+                                                Icon(
+                                                    imageVector = Lucide.CircleX,
+                                                    contentDescription = null,
+                                                    tint = AppTheme.textColorRed,
+                                                )
+                                            }
+
+
+                                            Text(
+                                                text = remoteServerConnectionMessage!!,
+                                                color =
+                                                    if (remoteServerConnection) {
+                                                        AppTheme.textColorGreen
+                                                    } else {
+                                                        AppTheme.textColorRed
+                                                    },
+                                            )
+                                        }
+                                    } else {
+                                        Spacer(
+                                            modifier = Modifier
+                                        )
+                                    }
+
+                                    SettingsButton(
+                                        text = if (isCheckingRoomVoxConnection) {
+                                            "Prüfe..."
+                                        } else {
+                                            "Prüfen"
+                                        },
+                                        enabled = !isCheckingRoomVoxConnection,
+                                        onClick = { checkConnection() },
+                                        modifier = Modifier.width(200.dp),
+                                    )
+                                }
+                            }
+                        }
+
+                        else -> Unit
                     }
-                )
-
-                // allow edit
+                }
             }
-        }
 
-        // Application
-        item {
-            SettingsSection(title = "Applikation") {
-                SettingsSwitch(
-                    checked = fullscreen,
-                    onCheckedChange = {
-                        fullscreen = it
-                    },
-                    text = "Fullscreen",
-                )
+            // Calendar
+            item {
+                SettingsSection(
+                    title = "Kalender"
+                ) {
+
+                    SettingsDropdown(
+                        label = "Raum auswählen",
+                        options = loadedRooms,
+                        selectedOption = loadedRooms.find { it.id == selectedRoomId }
+                            ?: loadedRooms.firstOrNull(),
+                        optionText = { room -> room.name },
+                        onOptionSelected = { room ->
+                            selectedRoomId = room.id
+                        }
+                    )
+
+                    // allow edit
+                }
             }
-        }
 
-        // Admin
-        item {
-
-            SettingsSection(title = "Admin") {
-                SettingsSwitch(
-                    checked = adminPinActive,
-                    onCheckedChange = {
-                        adminPinActive = it
-                    },
-                    text = "Admin PIN",
-                )
-
-                if (adminPinActive) {
-                    SettingsTextInput(
-                        label = "Admin PIN",
-                        value = adminPin,
-                        onValueChange = {
-                            adminPin = it.filter(Char::isDigit).take(4)
+            // Application
+            item {
+                SettingsSection(title = "Applikation") {
+                    SettingsSwitch(
+                        checked = fullscreen,
+                        onCheckedChange = {
+                            fullscreen = it
                         },
-                        keyboardType = KeyboardType.NumberPassword,
-                        rules = adminPinRules,
-                        isPassword = true,
+                        text = "Fullscreen",
                     )
                 }
             }
 
-        }
+            // Admin
+            item {
 
-        // Buttons
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End),
-            ) {
-                SettingsButton(
-                    text = "Abbrechen",
-                    onClick = { onGoBack() },
-                    modifier = Modifier.width(200.dp),
-                )
+                SettingsSection(title = "Admin") {
+                    SettingsSwitch(
+                        checked = adminPinActive,
+                        onCheckedChange = {
+                            adminPinActive = it
+                        },
+                        text = "Admin PIN",
+                    )
 
-                SettingsButton(
-                    text = "Speichern",
-                    isPrimary = true,
-                    enabled = remoteServerConnection && (!adminPinActive || adminPinRules.isValid(adminPin)),
-                    onClick = { save() },
-                    modifier = Modifier.width(200.dp),
-                )
+                    if (adminPinActive) {
+                        SettingsTextInput(
+                            label = "Admin PIN",
+                            value = adminPin,
+                            onValueChange = {
+                                adminPin = it.filter(Char::isDigit).take(4)
+                            },
+                            keyboardType = KeyboardType.NumberPassword,
+                            rules = adminPinRules,
+                            isPassword = true,
+                        )
+                    }
+                }
+
+            }
+
+            // Buttons
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End),
+                ) {
+                    SettingsButton(
+                        text = "Abbrechen",
+                        onClick = { onGoBack() },
+                        modifier = Modifier.width(200.dp),
+                    )
+
+                    SettingsButton(
+                        text = "Speichern",
+                        isPrimary = true,
+                        enabled = remoteServerConnection && (!adminPinActive || adminPinRules.isValid(adminPin)),
+                        onClick = { save() },
+                        modifier = Modifier.width(200.dp),
+                    )
+                }
             }
         }
     }
