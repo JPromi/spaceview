@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.jpromi.spaceview.AppColor
+import com.jpromi.spaceview.AppTheme
 
 @Composable
 fun SettingsSection(
@@ -26,14 +26,14 @@ fun SettingsSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if(transparentBackground)  Color.Transparent else AppColor.backgroundSettings, shape = RoundedCornerShape(12.dp))
-            .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
+            .background(if(transparentBackground)  Color.Transparent else AppTheme.backgroundSettings, shape = RoundedCornerShape(12.dp))
+            .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(12.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
             text = title,
-            color = AppColor.textColor,
+            color = AppTheme.textColor,
             fontWeight = FontWeight.SemiBold,
         )
 

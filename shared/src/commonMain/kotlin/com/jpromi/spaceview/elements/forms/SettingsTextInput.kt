@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.Eye
 import com.composables.icons.lucide.EyeOff
 import com.composables.icons.lucide.Lucide
-import com.jpromi.spaceview.AppColor
+import com.jpromi.spaceview.AppTheme
 
 data class TextInputRules(
     val regex: Regex? = null,
@@ -72,7 +72,7 @@ fun SettingsTextInput(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
-            color = AppColor.textColor,
+            color = AppTheme.textColor,
             modifier = Modifier.padding(start = 5.dp)
         )
 
@@ -91,7 +91,7 @@ fun SettingsTextInput(
                 {
                     Text(
                         text = it,
-                        color = AppColor.textColor.copy(alpha = .5f),
+                        color = AppTheme.textColor.copy(alpha = .5f),
                     )
                 }
             },
@@ -119,7 +119,7 @@ fun SettingsTextInput(
                             } else {
                                 "Passwort anzeigen"
                             },
-                            tint = AppColor.textColor,
+                            tint = AppTheme.textColor,
                         )
                     }
                 }
@@ -127,26 +127,26 @@ fun SettingsTextInput(
                 null
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = AppColor.textColor,
-                unfocusedTextColor = AppColor.textColor,
-                disabledTextColor = AppColor.textColor.copy(alpha = .75f),
-                errorTextColor = AppColor.textColor,
-                focusedContainerColor = AppColor.background,
-                unfocusedContainerColor = AppColor.background,
-                disabledContainerColor = AppColor.background,
-                errorContainerColor = AppColor.background,
-                focusedBorderColor = AppColor.borderSettings,
-                unfocusedBorderColor = AppColor.borderSettings,
-                disabledBorderColor = AppColor.borderSettings,
-                errorBorderColor = AppColor.busyTagBackground,
-                cursorColor = AppColor.textColor,
-                errorCursorColor = AppColor.busyTagBackground,
+                focusedTextColor = AppTheme.textColor,
+                unfocusedTextColor = AppTheme.textColor,
+                disabledTextColor = AppTheme.textColor.copy(alpha = .75f),
+                errorTextColor = AppTheme.textColor,
+                focusedContainerColor = AppTheme.background,
+                unfocusedContainerColor = AppTheme.background,
+                disabledContainerColor = AppTheme.background,
+                errorContainerColor = AppTheme.background,
+                focusedBorderColor = AppTheme.borderSettings,
+                unfocusedBorderColor = AppTheme.borderSettings,
+                disabledBorderColor = AppTheme.borderSettings,
+                errorBorderColor = AppTheme.busyTagBackground,
+                cursorColor = AppTheme.textColor,
+                errorCursorColor = AppTheme.busyTagBackground,
             ),
             supportingText = {
                 if (!isValid) {
                     Text(
                         text = rules.errorMessage,
-                        color = AppColor.busyTagBackground,
+                        color = AppTheme.busyTagBackground,
                     )
                 }
             },

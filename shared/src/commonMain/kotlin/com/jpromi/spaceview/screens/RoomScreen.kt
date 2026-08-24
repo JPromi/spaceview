@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Settings
-import com.jpromi.spaceview.AppColor
+import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
@@ -138,7 +138,7 @@ fun RoomScreen(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = AppColor.background)
+            .background(color = AppTheme.background)
             .padding(32.dp)
     ) {
         if (isLoadingRoom || isLoadingAvailability) {
@@ -161,13 +161,13 @@ fun RoomScreen(
                         modifier = Modifier.padding(bottom = 4.dp),
                         fontWeight = FontWeight.W500,
                         fontSize = 50.sp,
-                        color = AppColor.textColor,
+                        color = AppTheme.textColor,
                     )
                     Text(
                         text = currentDateText,
                         fontWeight = FontWeight.W400,
                         fontSize = 20.sp,
-                        color = AppColor.textColor,
+                        color = AppTheme.textColor,
                     )
                 }
 
@@ -181,7 +181,7 @@ fun RoomScreen(
                         modifier = Modifier.padding(bottom = 4.dp),
                         fontWeight = FontWeight.W500,
                         fontSize = 30.sp,
-                        color = AppColor.textColor,
+                        color = AppTheme.textColor,
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -193,9 +193,9 @@ fun RoomScreen(
                             .border(
                                 width = 1.dp,
                                 color = if (roomUse?.currentEvent != null) {
-                                    AppColor.busyTagBackground
+                                    AppTheme.busyTagBackground
                                 } else {
-                                    AppColor.freeTagBackground
+                                    AppTheme.freeTagBackground
                                 },
                                 shape = RoundedCornerShape(12.dp)
                             )
@@ -203,9 +203,9 @@ fun RoomScreen(
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
                                         if (roomUse?.currentEvent != null) {
-                                            AppColor.busyTagBackground
+                                            AppTheme.busyTagBackground
                                         } else {
-                                            AppColor.freeTagBackground
+                                            AppTheme.freeTagBackground
                                         }.copy(alpha = 0.25f),
                                         Color.Transparent
                                     ),
@@ -226,7 +226,7 @@ fun RoomScreen(
                             ) {
                                 Text(
                                     text = "Belegt",
-                                    color = AppColor.textColor,
+                                    color = AppTheme.textColor,
                                     fontWeight = FontWeight.W700,
                                     fontSize = 32.sp,
                                     lineHeight = 10.sp,
@@ -244,14 +244,14 @@ fun RoomScreen(
                             ) {
                                 Text(
                                     text = "Frei",
-                                    color = AppColor.textColor,
+                                    color = AppTheme.textColor,
                                     fontWeight = FontWeight.W700,
                                     fontSize = 32.sp,
                                     lineHeight = 10.sp,
                                 )
                                 Text(
                                     text = "bis xx:xx", // ToDo: Implement time until free
-                                    color = AppColor.textColor,
+                                    color = AppTheme.textColor,
                                     fontSize = 18.sp,
                                     lineHeight = 18.sp,
                                 )
@@ -292,7 +292,7 @@ fun RoomScreen(
                                 .size(48.dp)
                                 .border(
                                     width = 1.dp,
-                                    color = AppColor.textColor,
+                                    color = AppTheme.textColor,
                                     shape = CircleShape
                                 ),
                         ) {
@@ -352,7 +352,7 @@ fun RoomScreen(
                                             .fillMaxWidth()
                                             .height(slotHeights[index])
                                             .background(
-                                                color = AppColor.slotBackground,
+                                                color = AppTheme.slotBackground,
                                                 shape = RoundedCornerShape(12.dp),
                                             )
                                             .padding(8.dp),
@@ -367,9 +367,9 @@ fun RoomScreen(
                                                 modifier = Modifier
                                                     .background(
                                                         color = if (slot.status == SlotStatus.BOOKED) {
-                                                            AppColor.busyTagBackground
+                                                            AppTheme.busyTagBackground
                                                         } else {
-                                                            AppColor.freeTagBackground
+                                                            AppTheme.freeTagBackground
                                                         },
                                                         shape = RoundedCornerShape(6.dp)
                                                     )
@@ -378,9 +378,9 @@ fun RoomScreen(
                                                 Text(
                                                     text = slot.status.toString(),
                                                     color = if (slot.status == SlotStatus.BOOKED) {
-                                                        AppColor.busyTabTextColor
+                                                        AppTheme.busyTabTextColor
                                                     } else {
-                                                        AppColor.freeTabTextColor
+                                                        AppTheme.freeTabTextColor
                                                     },
                                                 )
                                             }
@@ -388,7 +388,7 @@ fun RoomScreen(
                                             // Time
                                             Text(
                                                 text = "${slot.start.toTimeText()} - ${slot.end.toTimeText()}",
-                                                color = AppColor.textColor,
+                                                color = AppTheme.textColor,
                                             )
                                         }
 
@@ -400,7 +400,7 @@ fun RoomScreen(
                                             } else {
                                                 "Frei"
                                             },
-                                            color = AppColor.textColor,
+                                            color = AppTheme.textColor,
                                         )
                                     }
                                 }

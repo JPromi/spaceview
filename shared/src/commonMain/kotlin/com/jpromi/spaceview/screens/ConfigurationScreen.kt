@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.CircleCheck
 import com.composables.icons.lucide.CircleX
 import com.composables.icons.lucide.Lucide
-import com.jpromi.spaceview.AppColor
+import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
@@ -247,7 +247,7 @@ fun ConfigurationScreen(
         state = scrollState,
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColor.background)
+            .background(AppTheme.background)
             .draggable(
                 orientation = Orientation.Vertical,
                 state = rememberDraggableState { delta ->
@@ -265,14 +265,14 @@ fun ConfigurationScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(AppColor.backgroundSettings, shape = RoundedCornerShape(12.dp))
-                    .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
+                    .background(AppTheme.backgroundSettings, shape = RoundedCornerShape(12.dp))
+                    .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(12.dp))
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     text = "Provider",
-                    color = AppColor.textColor
+                    color = AppTheme.textColor
                 )
 
                 val providers: List<CalendarProvider> = listOf(
@@ -309,13 +309,13 @@ fun ConfigurationScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
+                                .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(12.dp))
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             Text(
                                 text = "RoomVox (Nextcloud) Provider",
-                                color = AppColor.textColor
+                                color = AppTheme.textColor
                             )
 
                             SettingsTextInput(
@@ -357,13 +357,13 @@ fun ConfigurationScreen(
                                             Icon(
                                                 imageVector = Lucide.CircleCheck,
                                                 contentDescription = null,
-                                                tint = AppColor.textColorGreen,
+                                                tint = AppTheme.textColorGreen,
                                             )
                                         } else {
                                             Icon(
                                                 imageVector = Lucide.CircleX,
                                                 contentDescription = null,
-                                                tint = AppColor.textColorRed,
+                                                tint = AppTheme.textColorRed,
                                             )
                                         }
 
@@ -372,9 +372,9 @@ fun ConfigurationScreen(
                                             text = remoteServerConnectionMessage!!,
                                             color =
                                                 if(remoteServerConnection) {
-                                                    AppColor.textColorGreen
+                                                    AppTheme.textColorGreen
                                                 } else {
-                                                    AppColor.textColorRed
+                                                    AppTheme.textColorRed
                                                 },
                                         )
                                     }
@@ -408,14 +408,14 @@ fun ConfigurationScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(AppColor.backgroundSettings, shape = RoundedCornerShape(12.dp))
-                    .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
+                    .background(AppTheme.backgroundSettings, shape = RoundedCornerShape(12.dp))
+                    .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(12.dp))
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     text = "Kalender",
-                    color = AppColor.textColor
+                    color = AppTheme.textColor
                 )
 
                 SettingsDropdown(
