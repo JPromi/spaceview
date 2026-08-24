@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import com.jpromi.spaceview.AppColor
+import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 
 @Composable
@@ -58,7 +58,7 @@ fun AdminPinPopup(
         Box(
             modifier = Modifier
                 .background(
-                    color = AppColor.background,
+                    color = AppTheme.background,
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(24.dp),
@@ -70,7 +70,7 @@ fun AdminPinPopup(
             ) {
                 Text(
                     text = "Admin PIN",
-                    color = AppColor.textColor,
+                    color = AppTheme.textColor,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -112,7 +112,7 @@ fun AdminPinPopup(
                         ) {
                             repeat(pinLength) { index ->
                                 val hasDigit = pinState.getOrNull(index) != null
-                                val borderColor = if (hasError) Color(0xFFFF6B6B) else AppColor.textColor
+                                val borderColor = if (hasError) Color(0xFFFF6B6B) else AppTheme.textColor
 
                                 Box(
                                     modifier = Modifier

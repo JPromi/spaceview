@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.jpromi.spaceview.AppColor
+import com.jpromi.spaceview.AppTheme
 
 @Composable
 fun SettingsButton(
@@ -44,24 +44,24 @@ fun SettingsButton(
     content: @Composable RowScope.() -> Unit,
 ) {
     val borderColor = if (enabled) {
-        AppColor.primary
+        AppTheme.primary
     } else {
         Color.Transparent
     }
 
     val buttonColors = if (isPrimary) {
         ButtonDefaults.buttonColors(
-            containerColor = AppColor.primary,
-            contentColor = AppColor.textColor,
-            disabledContainerColor = AppColor.primary.copy(alpha = .45f),
-            disabledContentColor = AppColor.textColor.copy(alpha = .5f),
+            containerColor = AppTheme.primary,
+            contentColor = AppTheme.textColor,
+            disabledContainerColor = AppTheme.primary.copy(alpha = .45f),
+            disabledContentColor = AppTheme.textColor.copy(alpha = .5f),
         )
     } else {
         ButtonDefaults.buttonColors(
-            containerColor = AppColor.primary.copy(alpha = .20f),
-            contentColor = AppColor.textColor,
-            disabledContainerColor = AppColor.primary.copy(alpha = .10f),
-            disabledContentColor = AppColor.textColor.copy(alpha = .5f),
+            containerColor = AppTheme.primary.copy(alpha = .20f),
+            contentColor = AppTheme.textColor,
+            disabledContainerColor = AppTheme.primary.copy(alpha = .10f),
+            disabledContentColor = AppTheme.textColor.copy(alpha = .5f),
         )
     }
 

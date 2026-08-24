@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.CircleCheck
 import com.composables.icons.lucide.CircleX
 import com.composables.icons.lucide.Lucide
-import com.jpromi.spaceview.AppColor
+import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
@@ -45,6 +45,7 @@ import com.jpromi.spaceview.elements.forms.SettingsDropdown
 import com.jpromi.spaceview.elements.forms.SettingsSection
 import com.jpromi.spaceview.elements.forms.SettingsSwitch
 import com.jpromi.spaceview.elements.forms.SettingsTextInput
+import com.jpromi.spaceview.elements.forms.TextInputRules
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.models.CalendarProvider
 import com.jpromi.spaceview.models.Room
@@ -67,6 +68,7 @@ fun ConfigurationScreen(
         mutableStateOf(calendarSettings.calendarProvider ?: CalendarProviderENUM.DEMO)
     }
 
+    // RoomVox
     var selectedRoomVoxServerUrl by remember {
         mutableStateOf(calendarSettings.roomVoxServerUrl)
     }
@@ -75,10 +77,23 @@ fun ConfigurationScreen(
     }
     var isCheckingRoomVoxConnection by remember { mutableStateOf(false) }
 
+    // UI
     var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
     var showLogo by remember { mutableStateOf(calendarSettings.showLogo) }
 
     var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
+
+    // Admin
+    var adminPinActive by remember { mutableStateOf(appSettings.adminPin.isNotEmpty()) }
+    var adminPin by remember { mutableStateOf(appSettings.adminPin) }
+    val adminPinRules = remember {
+        TextInputRules(
+            regex = Regex("\\d{4}"),
+            maxLength = 4,
+            allowEmpty = false,
+            errorMessage = "PIN muss 4 Ziffern lang sein",
+        )
+    }
 
     // tmp
     val coroutineScope = rememberCoroutineScope()
@@ -172,6 +187,11 @@ fun ConfigurationScreen(
     }
 
     fun save() {
+        // validator
+        if (!(adminPinRules.isValid(adminPin) || !adminPinActive)) {
+            return
+        }
+
         // Calendar Settings
         calendarSettings.calendarProvider = selectedProvider
 
@@ -185,7 +205,12 @@ fun ConfigurationScreen(
         }
 
         // set Room ID
-        if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
+        if (
+            selectedProvider in listOf(
+                CalendarProviderENUM.ROOMVOX,
+                CalendarProviderENUM.DEMO,
+            )
+        ) {
             calendarSettings.selectedRoomId = selectedRoomId
         } else {
             calendarSettings.selectedRoomId = ""
@@ -193,6 +218,13 @@ fun ConfigurationScreen(
 
         calendarSettings.showAddEvent = showAddEvent;
         calendarSettings.showLogo = showLogo
+
+        // Admin
+        if (adminPinActive) {
+            appSettings.adminPin = adminPin
+        } else {
+            appSettings.adminPin = ""
+        }
 
         if(appSettings.fullscreen != fullscreen)
             fullscreenController?.setFullscreen(fullscreen);
@@ -215,7 +247,7 @@ fun ConfigurationScreen(
         state = scrollState,
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColor.background)
+            .background(AppTheme.background)
             .draggable(
                 orientation = Orientation.Vertical,
                 state = rememberDraggableState { delta ->
@@ -230,18 +262,9 @@ fun ConfigurationScreen(
 
         // Provider
         item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(AppColor.backgroundSettings, shape = RoundedCornerShape(12.dp))
-                    .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            SettingsSection(
+                title = "Provider"
             ) {
-                Text(
-                    text = "Provider",
-                    color = AppColor.textColor
-                )
 
                 val providers: List<CalendarProvider> = listOf(
                     CalendarProvider(
@@ -274,17 +297,10 @@ fun ConfigurationScreen(
 
                 when (selectedProvider) {
                     CalendarProviderENUM.ROOMVOX -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        SettingsSection(
+                            title = "RoomVox Provider",
+                            transparentBackground = true
                         ) {
-                            Text(
-                                text = "RoomVox (Nextcloud) Provider",
-                                color = AppColor.textColor
-                            )
 
                             SettingsTextInput(
                                 label = "Server",
@@ -307,7 +323,8 @@ fun ConfigurationScreen(
                                     remoteServerConnection = false
                                     loadedRooms = emptyList()
                                 },
-                                keyboardType = KeyboardType.Text
+                                keyboardType = KeyboardType.Text,
+                                isPassword = true,
                             )
 
                             Row(
@@ -324,13 +341,13 @@ fun ConfigurationScreen(
                                             Icon(
                                                 imageVector = Lucide.CircleCheck,
                                                 contentDescription = null,
-                                                tint = AppColor.textColorGreen,
+                                                tint = AppTheme.textColorGreen,
                                             )
                                         } else {
                                             Icon(
                                                 imageVector = Lucide.CircleX,
                                                 contentDescription = null,
-                                                tint = AppColor.textColorRed,
+                                                tint = AppTheme.textColorRed,
                                             )
                                         }
 
@@ -339,9 +356,9 @@ fun ConfigurationScreen(
                                             text = remoteServerConnectionMessage!!,
                                             color =
                                                 if(remoteServerConnection) {
-                                                    AppColor.textColorGreen
+                                                    AppTheme.textColorGreen
                                                 } else {
-                                                    AppColor.textColorRed
+                                                    AppTheme.textColorRed
                                                 },
                                         )
                                     }
@@ -372,18 +389,9 @@ fun ConfigurationScreen(
 
         // Calendar
         item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(AppColor.backgroundSettings, shape = RoundedCornerShape(12.dp))
-                    .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(12.dp))
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            SettingsSection(
+                title = "Kalender"
             ) {
-                Text(
-                    text = "Kalender",
-                    color = AppColor.textColor
-                )
 
                 SettingsDropdown(
                     label = "Raum auswählen",
@@ -413,6 +421,34 @@ fun ConfigurationScreen(
             }
         }
 
+        // Admin
+        item {
+
+            SettingsSection(title = "Admin") {
+                SettingsSwitch(
+                    checked = adminPinActive,
+                    onCheckedChange = {
+                        adminPinActive = it
+                    },
+                    text = "Admin PIN",
+                )
+
+                if (adminPinActive) {
+                    SettingsTextInput(
+                        label = "Admin PIN",
+                        value = adminPin,
+                        onValueChange = {
+                            adminPin = it.filter(Char::isDigit).take(4)
+                        },
+                        keyboardType = KeyboardType.NumberPassword,
+                        rules = adminPinRules,
+                        isPassword = true,
+                    )
+                }
+            }
+
+        }
+
         // Buttons
         item {
             Row(
@@ -428,7 +464,7 @@ fun ConfigurationScreen(
                 SettingsButton(
                     text = "Speichern",
                     isPrimary = true,
-                    enabled = remoteServerConnection,
+                    enabled = remoteServerConnection && (!adminPinActive || adminPinRules.isValid(adminPin)),
                     onClick = { save() },
                     modifier = Modifier.width(200.dp),
                 )

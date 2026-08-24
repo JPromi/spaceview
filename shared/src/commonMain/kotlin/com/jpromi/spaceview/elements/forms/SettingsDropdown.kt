@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.ChevronDown
 import com.composables.icons.lucide.Lucide
-import com.jpromi.spaceview.AppColor
+import com.jpromi.spaceview.AppTheme
 
 @Composable
 fun <T> SettingsDropdown(
@@ -46,7 +46,7 @@ fun <T> SettingsDropdown(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
-            color = AppColor.textColor,
+            color = AppTheme.textColor,
             modifier = Modifier.padding(start = 5.dp)
         )
 
@@ -59,13 +59,13 @@ fun <T> SettingsDropdown(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
-                        .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(8.dp)),
+                        .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(8.dp)),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColor.background,
-                        contentColor = AppColor.textColor,
-                        disabledContainerColor = AppColor.background,
-                        disabledContentColor = AppColor.textColor.copy(alpha = .75f),
+                        containerColor = AppTheme.background,
+                        contentColor = AppTheme.textColor,
+                        disabledContainerColor = AppTheme.background,
+                        disabledContentColor = AppTheme.textColor.copy(alpha = .75f),
                     ),
                 ) {
                     Text(selectedText)
@@ -93,9 +93,9 @@ fun <T> SettingsDropdown(
                     Surface(
                         modifier = Modifier
                             .width(dropdownWidth)
-                            .border(.5.dp, AppColor.borderSettings, shape = RoundedCornerShape(8.dp)),
+                            .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(8.dp)),
                         shape = RoundedCornerShape(8.dp),
-                        color = AppColor.background,
+                        color = AppTheme.background,
                         tonalElevation = 0.dp,
                         shadowElevation = 0.dp,
                     ) {
@@ -105,7 +105,7 @@ fun <T> SettingsDropdown(
                                     text = {
                                         Text(
                                             text = optionText(option),
-                                            color = AppColor.textColor,
+                                            color = AppTheme.textColor,
                                         )
                                     },
                                     onClick = {

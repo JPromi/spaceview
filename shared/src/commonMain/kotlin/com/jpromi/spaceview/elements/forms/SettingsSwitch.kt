@@ -8,7 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import com.jpromi.spaceview.AppColor
+import com.jpromi.spaceview.AppTheme
 
 @Composable
 fun SettingsSwitch(
@@ -22,16 +22,16 @@ fun SettingsSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                uncheckedBorderColor = AppColor.borderSettings,
-                checkedTrackColor = AppColor.primary,
-                uncheckedTrackColor = AppColor.background,
-                disabledUncheckedTrackColor = AppColor.background.copy(alpha = .10f),
-                disabledUncheckedBorderColor = AppColor.borderSettings.copy(alpha = .10f),
-                disabledCheckedTrackColor=  AppColor.background.copy(alpha = .10f),
-                disabledCheckedBorderColor = AppColor.borderSettings.copy(alpha = .10f),
+                uncheckedBorderColor = AppTheme.borderSettings,
+                checkedTrackColor = AppTheme.primary,
+                uncheckedTrackColor = AppTheme.background,
+                disabledUncheckedTrackColor = AppTheme.background.copy(alpha = .10f),
+                disabledUncheckedBorderColor = AppTheme.borderSettings.copy(alpha = .10f),
+                disabledCheckedTrackColor=  AppTheme.background.copy(alpha = .10f),
+                disabledCheckedBorderColor = AppTheme.borderSettings.copy(alpha = .10f),
             ),
             enabled = enabled
         )
-        Text(text, color = AppColor.textColor)
+        Text(text, color = AppTheme.textColor)
     }
 }

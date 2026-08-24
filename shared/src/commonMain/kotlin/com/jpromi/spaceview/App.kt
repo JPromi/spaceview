@@ -1,6 +1,5 @@
 package com.jpromi.spaceview
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
 import com.jpromi.spaceview.controllers.LocalFullscreenController
@@ -18,7 +17,7 @@ fun App() {
     val appSettings = AppSettings();
     LocalFullscreenController.current?.setFullscreen(appSettings.fullscreen);
 
-    MaterialTheme {
+    AppTheme {
         var currentScreen by remember { mutableStateOf(Screen.Room) }
 
         when (currentScreen) {
