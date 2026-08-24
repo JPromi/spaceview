@@ -262,18 +262,9 @@ fun ConfigurationScreen(
 
         // Provider
         item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(AppTheme.backgroundSettings, shape = RoundedCornerShape(12.dp))
-                    .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(12.dp))
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            SettingsSection(
+                title = "Provider"
             ) {
-                Text(
-                    text = "Provider",
-                    color = AppTheme.textColor
-                )
 
                 val providers: List<CalendarProvider> = listOf(
                     CalendarProvider(
@@ -306,17 +297,10 @@ fun ConfigurationScreen(
 
                 when (selectedProvider) {
                     CalendarProviderENUM.ROOMVOX -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(12.dp))
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        SettingsSection(
+                            title = "RoomVox Provider",
+                            transparentBackground = true
                         ) {
-                            Text(
-                                text = "RoomVox (Nextcloud) Provider",
-                                color = AppTheme.textColor
-                            )
 
                             SettingsTextInput(
                                 label = "Server",
@@ -405,18 +389,9 @@ fun ConfigurationScreen(
 
         // Calendar
         item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(AppTheme.backgroundSettings, shape = RoundedCornerShape(12.dp))
-                    .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(12.dp))
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            SettingsSection(
+                title = "Kalender"
             ) {
-                Text(
-                    text = "Kalender",
-                    color = AppTheme.textColor
-                )
 
                 SettingsDropdown(
                     label = "Raum auswählen",
