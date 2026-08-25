@@ -11,12 +11,12 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		69DA0259D66281DE332792C9 /* Exceptions for "iosApp" folder in "Space View" target */ = {
+		69DA0259D66281DE332792C9 /* Exceptions for "iosApp" folder in "SpaceView" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = B67B9BB41871CFB57A34F547 /* Space View */;
+			target = B67B9BB41871CFB57A34F547 /* SpaceView */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -24,7 +24,7 @@
 		917AB061BC6BF33EE90BD37A /* iosApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				69DA0259D66281DE332792C9 /* Exceptions for "iosApp" folder in "Space View" target */,
+				69DA0259D66281DE332792C9 /* Exceptions for "iosApp" folder in "SpaceView" target */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -67,9 +67,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B67B9BB41871CFB57A34F547 /* Space View */ = {
+		B67B9BB41871CFB57A34F547 /* SpaceView */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CBA01D155401506AC5EBC1E1 /* Build configuration list for PBXNativeTarget "Space View" */;
+			buildConfigurationList = CBA01D155401506AC5EBC1E1 /* Build configuration list for PBXNativeTarget "SpaceView" */;
 			buildPhases = (
 				289001E76BEAC80027F3BDCA /* Compile Kotlin Framework */,
 				B349246D002F3A47A0CCE2EB /* Sources */,
@@ -83,7 +83,7 @@
 			fileSystemSynchronizedGroups = (
 				917AB061BC6BF33EE90BD37A /* iosApp */,
 			);
-			name = "Space View";
+			name = SpaceView;
 			packageProductDependencies = (
 			);
 			productName = iosApp;
@@ -105,7 +105,7 @@
 					};
 				};
 			};
-			buildConfigurationList = F0199713F8AEF20CBA95E8F5 /* Build configuration list for PBXProject "Space View" */;
+			buildConfigurationList = F0199713F8AEF20CBA95E8F5 /* Build configuration list for PBXProject "SpaceView" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -119,7 +119,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B67B9BB41871CFB57A34F547 /* Space View */,
+				B67B9BB41871CFB57A34F547 /* SpaceView */,
 			);
 		};
 /* End PBXProject section */
@@ -363,7 +363,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		CBA01D155401506AC5EBC1E1 /* Build configuration list for PBXNativeTarget "Space View" */ = {
+		CBA01D155401506AC5EBC1E1 /* Build configuration list for PBXNativeTarget "SpaceView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DDE73177198360235AEC0CF2 /* Debug */,
@@ -372,7 +372,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F0199713F8AEF20CBA95E8F5 /* Build configuration list for PBXProject "Space View" */ = {
+		F0199713F8AEF20CBA95E8F5 /* Build configuration list for PBXProject "SpaceView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B8432A31A31B19EF16378521 /* Debug */,

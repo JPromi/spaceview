@@ -17,8 +17,8 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B67B9BB41871CFB57A34F547"
                BuildableName = "SpaceView.app"
-               BlueprintName = "Space View"
-               ReferencedContainer = "container:Space View.xcodeproj">
+               BlueprintName = "SpaceView"
+               ReferencedContainer = "container:SpaceView.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -47,8 +47,8 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B67B9BB41871CFB57A34F547"
             BuildableName = "SpaceView.app"
-            BlueprintName = "Space View"
-            ReferencedContainer = "container:Space View.xcodeproj">
+            BlueprintName = "SpaceView"
+            ReferencedContainer = "container:SpaceView.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -64,8 +64,8 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B67B9BB41871CFB57A34F547"
             BuildableName = "SpaceView.app"
-            BlueprintName = "Space View"
-            ReferencedContainer = "container:Space View.xcodeproj">
+            BlueprintName = "SpaceView"
+            ReferencedContainer = "container:SpaceView.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
