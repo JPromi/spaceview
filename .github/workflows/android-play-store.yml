@@ -87,7 +87,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
           packageName: com.jpromi.spaceview
           releaseFiles: androidApp/build/outputs/bundle/release/*.aab
-          track: internal
+          tracks: internal
           status: draft
           releaseName: ${{ env.RELEASE_NAME }}
 
@@ -98,6 +98,6 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
           packageName: com.jpromi.spaceview
           releaseFiles: androidApp/build/outputs/bundle/release/*.aab
-          track: internal
+          tracks: internal
           status: draft
           releaseName: ${{ env.RELEASE_NAME }}
