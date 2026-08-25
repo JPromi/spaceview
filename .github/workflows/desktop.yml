@@ -119,15 +119,6 @@ jobs:
           ./gradlew :desktopApp:packageReleaseDmg \
             -Papp.version="$VERSION"
 
-      - name: Show jpackage logs on failure
-        if: failure()
-        run: |
-          echo "=== jpackage stderr ==="
-          cat desktopApp/build/compose/logs/createReleaseDistributable/*-err.txt || true
-
-          echo "=== jpackage stdout ==="
-          cat desktopApp/build/compose/logs/createReleaseDistributable/*-out.txt || true
-
       - name: Upload Release Dmg
         uses: actions/upload-artifact@v4
         with:
