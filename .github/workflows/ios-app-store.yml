@@ -100,6 +100,10 @@ jobs:
             -sdk iphoneos \
             -destination "generic/platform=iOS" \
             -archivePath "$RUNNER_TEMP/SpaceView.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${{ vars.APPLE_TEAM_ID }}" \
+            PROVISIONING_PROFILE_SPECIFIER="SpaceView App Store" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             archive
 
       - name: Create export options
