@@ -30,8 +30,8 @@ android {
         applicationId = "com.jpromi.spaceview"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = androidVersionName
-        versionName = appVersion
+        versionCode = androidVersionCode
+        versionName = androidVersionName
     }
     packaging {
         resources {
