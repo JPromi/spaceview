@@ -3,6 +3,7 @@ package com.jpromi.spaceview.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -16,12 +17,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -36,14 +39,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.Calendar
 import com.composables.icons.lucide.CircleCheck
 import com.composables.icons.lucide.CircleX
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Paperclip
 import com.composables.icons.lucide.Server
 import com.composables.icons.lucide.Settings
 import com.composables.icons.lucide.Shield
@@ -51,6 +61,8 @@ import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
+import com.jpromi.spaceview.elements.Expandable
+import com.jpromi.spaceview.elements.LibrariesView
 import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
 import com.jpromi.spaceview.elements.forms.SettingsNavigationButton
@@ -66,6 +78,12 @@ import com.jpromi.spaceview.services.RoomService
 import com.jpromi.spaceview.services.impl.DemoRoomService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import kotlinx.coroutines.launch
+import com.mikepenz.aboutlibraries.Libs
+import spaceview.shared.generated.resources.Res
+import kotlin.collections.getValue
+import kotlin.collections.setValue
+import kotlin.getValue
+import kotlin.setValue
 
 @Composable
 fun ConfigurationScreen(
@@ -238,7 +256,7 @@ fun ConfigurationScreen(
             appSettings.adminPin = ""
         }
 
-        if(appSettings.fullscreen != fullscreen)
+        if (appSettings.fullscreen != fullscreen)
             fullscreenController?.setFullscreen(fullscreen);
 
         appSettings.fullscreen = fullscreen;
@@ -260,6 +278,7 @@ fun ConfigurationScreen(
     val calendarSectionIndex = 1
     val applicationSectionIndex = 2
     val adminSectionIndex = 3
+    val licenseSectionIndex = 4
     val sectionIndices = remember {
         listOf(
             providerSectionIndex,
@@ -345,6 +364,14 @@ fun ConfigurationScreen(
                         icon = Lucide.Shield,
                         isActive = activeSectionIndex == adminSectionIndex,
                         onClick = { scrollToSection(adminSectionIndex) },
+                    )
+                }
+                item {
+                    SettingsNavigationButton(
+                        text = "Licenses",
+                        icon = Lucide.Paperclip,
+                        isActive = activeSectionIndex == adminSectionIndex,
+                        onClick = { scrollToSection(licenseSectionIndex) },
                     )
                 }
             }
@@ -578,6 +605,12 @@ fun ConfigurationScreen(
                         onClick = { save() },
                         modifier = Modifier.width(200.dp),
                     )
+                }
+            }
+
+            item {
+                SettingsSection(title = "Licenses") {
+                    LibrariesView()
                 }
             }
         }

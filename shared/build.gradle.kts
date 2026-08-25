@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    id("com.mikepenz.aboutlibraries.plugin")
 }
 
 kotlin {
@@ -67,6 +68,7 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)
             implementation(libs.coil.svg)
+            implementation(libs.aboutlibraries.core)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -82,4 +84,15 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
+}
+
+
+aboutLibraries {
+    export {
+        // Define the output path for manual generation
+        // Adjust the path based on your project structure (e.g., composeResources, Android res/raw)
+        outputFile = file("src/commonMain/composeResources/files/aboutlibraries.json")
+        // Optionally specify the variant for export
+        // variant = "release"
+    }
 }
