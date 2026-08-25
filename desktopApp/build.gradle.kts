@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+val appVersion = providers.gradleProperty("app.version").get()
+
 dependencies {
     implementation(project(":shared"))
 
@@ -27,7 +29,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "SpaceView"
-            packageVersion = "1.0.0"
+            packageVersion = appVersion
 
             windows {
                 iconFile.set(project.file("src/main/resources/icons/windows.ico"))
