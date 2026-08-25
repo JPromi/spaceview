@@ -5,6 +5,9 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+val appVersion = providers.gradleProperty("app.version").get()
+val androidVersionCode = providers.gradleProperty("android.versionCode").get().toInt()
+
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_11
@@ -27,8 +30,8 @@ android {
         applicationId = "com.jpromi.spaceview"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = androidVersionCode
+        versionName = appVersion
     }
     packaging {
         resources {
