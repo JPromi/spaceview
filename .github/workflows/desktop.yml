@@ -1,0 +1,126 @@
+name: Desktop Build
+
+on:
+  push:
+    tags:
+      - "v*"
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Base version for dev build"
+        required: true
+        default: "0.0.0"
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096M -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+
+jobs:
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gradle setup
+        uses: ./.github/actions/gradle-setup
+
+      - name: Determine version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            ARTIFACT_VERSION="$VERSION"
+          else
+            VERSION="${{ inputs.version }}"
+            ARTIFACT_VERSION="${VERSION}-dev.${GITHUB_RUN_NUMBER}"
+          fi
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "ARTIFACT_VERSION=$ARTIFACT_VERSION" >> "$GITHUB_ENV"
+
+      - name: Build Release Deb
+        run: |
+          ./gradlew :desktopApp:packageReleaseDeb \
+            -Papp.version="$VERSION"
+
+      - name: Upload Release Deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: spaceview-linux-${{ env.ARTIFACT_VERSION }}
+          path: desktopApp/build/compose/binaries/main-release/deb/*.deb
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gradle setup
+        uses: ./.github/actions/gradle-setup
+
+      - name: Determine version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            ARTIFACT_VERSION="$VERSION"
+          else
+            VERSION="${{ inputs.version }}"
+            ARTIFACT_VERSION="${VERSION}-dev.${GITHUB_RUN_NUMBER}"
+          fi
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "ARTIFACT_VERSION=$ARTIFACT_VERSION" >> "$GITHUB_ENV"
+
+      - name: Build Release Msi
+        shell: bash
+        run: |
+          ./gradlew :desktopApp:packageReleaseMsi \
+            -Papp.version="$VERSION"
+
+      - name: Upload Release Msi
+        uses: actions/upload-artifact@v4
+        with:
+          name: spaceview-windows-${{ env.ARTIFACT_VERSION }}
+          path: desktopApp/build/compose/binaries/main-release/msi/*.msi
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gradle setup
+        uses: ./.github/actions/gradle-setup
+
+      - name: Determine version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            ARTIFACT_VERSION="$VERSION"
+          else
+            VERSION="${{ inputs.version }}"
+            ARTIFACT_VERSION="${VERSION}-dev.${GITHUB_RUN_NUMBER}"
+          fi
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "ARTIFACT_VERSION=$ARTIFACT_VERSION" >> "$GITHUB_ENV"
+
+      - name: Build Release Dmg
+        run: |
+          ./gradlew :desktopApp:packageReleaseDmg \
+            -Papp.version="$VERSION"
+
+      - name: Upload Release Dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: spaceview-macos-${{ env.ARTIFACT_VERSION }}
+          path: desktopApp/build/compose/binaries/main-release/dmg/*.dmg
