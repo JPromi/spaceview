@@ -350,7 +350,9 @@ fun ConfigurationScreen(
             }
         }
 
-        VerticalDivider()
+        VerticalDivider(
+            color = AppTheme.borderSettings,
+        )
 
         // Settings
         LazyColumn(
