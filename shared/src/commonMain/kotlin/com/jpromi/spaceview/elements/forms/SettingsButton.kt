@@ -61,7 +61,7 @@ fun SettingsButton(
             containerColor = AppTheme.primary.copy(alpha = .20f),
             contentColor = AppTheme.textColor,
             disabledContainerColor = AppTheme.primary.copy(alpha = .10f),
-            disabledContentColor = AppTheme.textColor.copy(alpha = .5f),
+            disabledContentColor = AppTheme.textColor.copy(alpha = .5f)
         )
     }
 
