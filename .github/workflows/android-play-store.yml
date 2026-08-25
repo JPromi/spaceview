@@ -70,7 +70,7 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew :androidApp:bundleRelease \
-            -Papp.version="$VERSION_NAME" \
+            -Pandroid.version="$VERSION_NAME" \
             -Pandroid.versionCode="$VERSION_CODE"
 
       - name: Upload build artifact
