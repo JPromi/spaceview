@@ -41,6 +41,10 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "ARTIFACT_VERSION=$ARTIFACT_VERSION" >> "$GITHUB_ENV"
 
+      - name: Export lib info
+        run: |
+          ./gradlew :shared:exportLibraryDefinitions
+
       - name: Build Release Deb
         run: |
           ./gradlew :desktopApp:packageReleaseDeb \
@@ -76,6 +80,10 @@ jobs:
 
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "ARTIFACT_VERSION=$ARTIFACT_VERSION" >> "$GITHUB_ENV"
+
+      - name: Export lib info
+        run: |
+          ./gradlew :shared:exportLibraryDefinitions
 
       - name: Build Release Msi
         shell: bash
@@ -113,6 +121,10 @@ jobs:
 
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "ARTIFACT_VERSION=$ARTIFACT_VERSION" >> "$GITHUB_ENV"
+
+      - name: Export lib info
+        run: |
+          ./gradlew :shared:exportLibraryDefinitions
 
       - name: Build Release Dmg
         run: |
