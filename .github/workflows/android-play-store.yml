@@ -15,6 +15,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: Configure Play Store
 
     # Bei manuellem Start nur develop erlauben
     if: >
@@ -78,23 +79,6 @@ jobs:
         with:
           name: spaceview-${{ env.VERSION_NAME }}
           path: androidApp/build/outputs/bundle/release/*.aab
-
-# TMP
-      - name: Check service account secret
-        env:
-          GOOGLE_PLAY_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
-        run: |
-          if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT" ]; then
-            echo "Service account secret missing"
-            exit 1
-          fi
-      
-          echo "$GOOGLE_PLAY_SERVICE_ACCOUNT" | jq empty
-          echo "Service account JSON valid"
-      
-      - name: Check AAB
-        run: |
-          ls -lah androidApp/build/outputs/bundle/release/
 
       - name: Upload release tag to Google Play
         if: startsWith(github.ref, 'refs/tags/v')
