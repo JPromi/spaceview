@@ -73,13 +73,22 @@ jobs:
           ./gradlew :shared:linkReleaseFrameworkIosArm64
 
       - name: Set iOS version
+        shell: bash
         run: |
           /usr/libexec/PlistBuddy \
-            -c "Set :CFBundleShortVersionString $VERSION_NAME" \
-            iosApp/iosApp/Info.plist
-
+            -c "Delete :CFBundleShortVersionString" \
+            iosApp/iosApp/Info.plist || true
+      
           /usr/libexec/PlistBuddy \
-            -c "Set :CFBundleVersion $BUILD_NUMBER" \
+            -c "Add :CFBundleShortVersionString string $VERSION_NAME" \
+            iosApp/iosApp/Info.plist
+      
+          /usr/libexec/PlistBuddy \
+            -c "Delete :CFBundleVersion" \
+            iosApp/iosApp/Info.plist || true
+      
+          /usr/libexec/PlistBuddy \
+            -c "Add :CFBundleVersion string $BUILD_NUMBER" \
             iosApp/iosApp/Info.plist
 
       - name: Archive iOS app
