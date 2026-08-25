@@ -72,25 +72,6 @@ jobs:
           chmod +x ./gradlew
           ./gradlew :shared:linkReleaseFrameworkIosArm64
 
-      - name: Set iOS version
-        shell: bash
-        run: |
-          /usr/libexec/PlistBuddy \
-            -c "Delete :CFBundleShortVersionString" \
-            iosApp/iosApp/Info.plist || true
-      
-          /usr/libexec/PlistBuddy \
-            -c "Add :CFBundleShortVersionString string $VERSION_NAME" \
-            iosApp/iosApp/Info.plist
-      
-          /usr/libexec/PlistBuddy \
-            -c "Delete :CFBundleVersion" \
-            iosApp/iosApp/Info.plist || true
-      
-          /usr/libexec/PlistBuddy \
-            -c "Add :CFBundleVersion string $BUILD_NUMBER" \
-            iosApp/iosApp/Info.plist
-
       - name: Archive iOS app
         run: |
           xcodebuild \
@@ -104,6 +85,8 @@ jobs:
             DEVELOPMENT_TEAM="${{ vars.APPLE_TEAM_ID }}" \
             PROVISIONING_PROFILE_SPECIFIER="SpaceView App Store" \
             CODE_SIGN_IDENTITY="Apple Distribution" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            MARKETING_VERSION="$VERSION_NAME" \
             archive
 
       - name: Create export options
