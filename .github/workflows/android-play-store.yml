@@ -87,7 +87,7 @@ jobs:
           packageName: com.jpromi.spaceview
           releaseFiles: androidApp/build/outputs/bundle/release/*.aab
           tracks: internal
-          status: completed
+          status: draft
           releaseName: ${{ env.RELEASE_NAME }}
 
       - name: Upload develop build to Google Play
@@ -98,5 +98,5 @@ jobs:
           packageName: com.jpromi.spaceview
           releaseFiles: androidApp/build/outputs/bundle/release/*.aab
           tracks: internal
-          status: completed
+          status: draft
           releaseName: ${{ env.RELEASE_NAME }}
