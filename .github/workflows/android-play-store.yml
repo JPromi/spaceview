@@ -62,6 +62,10 @@ jobs:
             | base64 --decode > "$RUNNER_TEMP/release.jks"
 
           echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          
+      - name: Export lib info
+        run: |
+          ./gradlew :shared:exportLibraryDefinitions
 
       - name: Build signed AAB
         env:

@@ -29,6 +29,7 @@ object AppTheme {
 
     val backgroundSettings = Color(0x15f5f5f5)
     val borderSettings = Color(0x30f5f5f5)
+    val linkColor = Color(0xff778FDC)
 
     private val colorScheme = darkColorScheme(
         primary = primary,

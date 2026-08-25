@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.composables.icons.lucide.Info
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Settings
 import com.jpromi.spaceview.AppTheme
@@ -48,6 +49,7 @@ import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
+import com.jpromi.spaceview.elements.AppInfoPopup
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.Room
@@ -82,6 +84,7 @@ fun RoomScreen(
     var currentDateText by remember { mutableStateOf("--.--.----") }
 
     var isAdminPinPopupVisible by remember { mutableStateOf(false) }
+    var isAppInfoPopupVisible by remember { mutableStateOf(false) }
 
 
     fun initRoomService() {
@@ -280,8 +283,28 @@ fun RoomScreen(
                     }
 
                     // Settings
-                    Box()
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    )
                     {
+                        IconButton(
+                            onClick = { isAppInfoPopupVisible = true },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = AppTheme.textColor,
+                                    shape = CircleShape
+                                ),
+                        ) {
+                            Icon(
+                                imageVector = Lucide.Info,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+
                         IconButton(
                             onClick = if (appSettings.adminPin.isNotEmpty()) {
                                 { isAdminPinPopupVisible = true }
@@ -438,6 +461,13 @@ fun RoomScreen(
             },
             onDismiss = { isAdminPinPopupVisible = false },
             appSettings = appSettings
+        )
+    }
+
+    // App Info Popup
+    if (isAppInfoPopupVisible) {
+        AppInfoPopup(
+            onDismiss = { isAppInfoPopupVisible = false }
         )
     }
 }
