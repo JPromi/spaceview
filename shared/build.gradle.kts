@@ -1,3 +1,5 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -6,6 +8,7 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.buildkonfig)
 }
 
 kotlin {
@@ -21,7 +24,7 @@ kotlin {
     
     jvm()
     
-    android {
+    androidLibrary {
        namespace = "com.jpromi.spaceview.shared"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
        minSdk = libs.versions.android.minSdk.get().toInt()
@@ -77,6 +80,18 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+    }
+}
+
+buildkonfig {
+    packageName = "com.jpromi.spaceview"
+    objectName = "BuildKonfig"
+
+    defaultConfigs {
+        buildConfigField(STRING, "APP_VERSION", providers.gradleProperty("app.version").get(), const = true)
+        buildConfigField(STRING, "ANDROID_VERSION", providers.gradleProperty("android.version").get(), const = true)
+        buildConfigField(INT, "ANDROID_VERSION_CODE", providers.gradleProperty("android.versionCode").get(), const = true)
+        buildConfigField(INT, "IOS_BUILD_NUMBER", providers.gradleProperty("ios.buildNumber").get(), const = true)
     }
 }
 
