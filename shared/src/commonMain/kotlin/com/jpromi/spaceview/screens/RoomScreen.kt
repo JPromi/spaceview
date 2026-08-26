@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.composables.icons.lucide.Info
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.RefreshCw
 import com.composables.icons.lucide.Settings
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
@@ -52,6 +54,8 @@ import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.elements.AppInfoPopup
 import com.jpromi.spaceview.elements.roomscreen.DateTimeView
 import com.jpromi.spaceview.elements.roomscreen.NameStatusView
+import com.jpromi.spaceview.elements.roomscreen.RoundIconButton
+import com.jpromi.spaceview.elements.roomscreen.SlotView
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.Room
@@ -74,6 +78,9 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import com.jpromi.spaceview.util.toTimeText
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun RoomScreen(
@@ -94,6 +101,7 @@ fun RoomScreen(
             Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         )
     }
+    val coroutineScope = rememberCoroutineScope()
 
     var isAdminPinPopupVisible by remember { mutableStateOf(false) }
     var isAppInfoPopupVisible by remember { mutableStateOf(false) }
@@ -119,29 +127,37 @@ fun RoomScreen(
         }
     }
 
+    suspend fun loadRoom() {
+        when (val result = roomService.getRoomById(calendarSettings.selectedRoomId)) {
+            is ApiResult.Success -> room = result.data
+            is ApiResult.Error -> {
+                room = null
+                errorMessage = result.toUserMessage()
+            }
+        }
+        isLoadingRoom = false
+    }
+
+    suspend fun loadRoomUse() {
+        when (val result = roomService.getRoomUse(calendarSettings.selectedRoomId)) {
+            is ApiResult.Success -> roomUse = result.data
+            is ApiResult.Error -> {
+                roomUse = null
+                errorMessage = result.toUserMessage()
+            }
+        }
+        isLoadingAvailability = false
+    }
+
     LaunchedEffect(calendarSettings.selectedRoomId, calendarSettings.calendarProvider) {
         initRoomService()
         isLoadingRoom = true
         isLoadingAvailability = true
 
         while (true) {
-            when (val result = roomService.getRoomById(calendarSettings.selectedRoomId)) {
-                is ApiResult.Success -> room = result.data
-                is ApiResult.Error -> {
-                    room = null
-                    errorMessage = result.toUserMessage()
-                }
-            }
-            isLoadingRoom = false
+            loadRoom()
+            loadRoomUse()
 
-            when (val result = roomService.getRoomUse(calendarSettings.selectedRoomId)) {
-                is ApiResult.Success -> roomUse = result.data
-                is ApiResult.Error -> {
-                    roomUse = null
-                    errorMessage = result.toUserMessage()
-                }
-            }
-            isLoadingAvailability = false
             delay(30.seconds) // 30 seconds
         }
     }
@@ -202,149 +218,46 @@ fun RoomScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     )
                     {
-                        IconButton(
+                        RoundIconButton(
                             onClick = { isAppInfoPopupVisible = true },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = AppTheme.textColor,
-                                    shape = CircleShape
-                                ),
-                        ) {
-                            Icon(
-                                imageVector = Lucide.Info,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-
-                        IconButton(
+                            icon = Lucide.Info
+                        )
+                        
+                        RoundIconButton(
                             onClick = if (appSettings.adminPin.isNotEmpty()) {
                                 { isAdminPinPopupVisible = true }
                             } else {
                                 onOpenConfiguration
-                            },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = AppTheme.textColor,
-                                    shape = CircleShape
-                                ),
-                        ) {
-                            Icon(
-                                imageVector = Lucide.Settings,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
+                            }, icon = Lucide.Settings)
+
+                        RoundIconButton(
+                            onClick =
+                                {
+                                    isLoadingRoom = true
+                                    isLoadingAvailability = true
+                                    coroutineScope.launch {
+                                        loadRoom()
+                                        loadRoomUse()
+                                        isLoadingRoom = false
+                                        isLoadingAvailability = false
+                                    }
+                                },
+                            icon =Lucide.RefreshCw
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column(modifier = Modifier.weight(3f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(
+                modifier = Modifier.weight(3f).fillMaxHeight(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
 
                 // Slots
-                Column(
-                    modifier = Modifier.fillMaxHeight().weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    if (isLoadingAvailability) {
-                        CircularProgressIndicator()
-                    } else {
-                        val slots = roomUse?.slots.orEmpty().filter { slot ->
-                            slot.end.toMinuteOfDay() > currentMinuteOfDay
-                        }
-
-                        BoxWithConstraints(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                        ) {
-                            val spacing = 6.dp
-                            val totalSpacing = spacing * (slots.size - 1).coerceAtLeast(0)
-                            val availableSlotHeight = maxOf(0.dp, maxHeight - totalSpacing)
-                            val durations = slots.map {
-                                (it.end.toMinuteOfDay() - it.start.toMinuteOfDay())
-                                    .coerceAtLeast(1)
-                                    .toLong()
-                            }
-                            val slotHeights = calculateSlotHeights(
-                                availableHeight = availableSlotHeight,
-                                durations = durations,
-                                minHeight = 70.dp,
-                            )
-
-                            Column(
-                                modifier = Modifier.verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(spacing),
-                            ) {
-                                slots.forEachIndexed { index, slot ->
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(slotHeights[index])
-                                            .background(
-                                                color = AppTheme.slotBackground,
-                                                shape = RoundedCornerShape(12.dp),
-                                            )
-                                            .padding(8.dp),
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            // Status
-                                            Box(
-                                                modifier = Modifier
-                                                    .background(
-                                                        color = if (slot.status == SlotStatus.BOOKED) {
-                                                            AppTheme.busyTagBackground
-                                                        } else {
-                                                            AppTheme.freeTagBackground
-                                                        },
-                                                        shape = RoundedCornerShape(6.dp)
-                                                    )
-                                                    .padding(vertical = 2.dp, horizontal = 6.dp)
-                                            ) {
-                                                Text(
-                                                    text = slot.status.toString(),
-                                                    color = if (slot.status == SlotStatus.BOOKED) {
-                                                        AppTheme.busyTabTextColor
-                                                    } else {
-                                                        AppTheme.freeTabTextColor
-                                                    },
-                                                )
-                                            }
-
-                                            // Time
-                                            Text(
-                                                text = "${slot.start.toTimeText()} - ${slot.end.toTimeText()}",
-                                                color = AppTheme.textColor,
-                                            )
-                                        }
-
-
-                                        // Title
-                                        Text(
-                                            text = if (slot.status == SlotStatus.BOOKED) {
-                                                slot.event?.title ?: "Belegt"
-                                            } else {
-                                                "Frei"
-                                            },
-                                            color = AppTheme.textColor,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+                Column(modifier = Modifier.fillMaxHeight().weight(1f)) {
+                    SlotView(roomUse, currentMinuteOfDay)
                 }
 
                 if (calendarSettings.showAddEvent) {
@@ -385,49 +298,4 @@ fun RoomScreen(
             onDismiss = { isAppInfoPopupVisible = false }
         )
     }
-}
-
-private fun calculateSlotHeights(
-    availableHeight: Dp,
-    durations: List<Long>,
-    minHeight: Dp,
-): List<Dp> {
-    if (durations.isEmpty()) return emptyList()
-
-    val minimumTotalHeight = minHeight.value * durations.size
-    if (availableHeight.value < minimumTotalHeight) {
-        return List(durations.size) { minHeight }
-    }
-
-    val heights = MutableList(durations.size) { 0f }
-    val flexibleSlots = durations.indices.toMutableSet()
-    var remainingHeight = availableHeight.value
-
-    while (flexibleSlots.isNotEmpty()) {
-        val remainingDuration = flexibleSlots
-            .sumOf { durations[it].toDouble() }
-            .toFloat()
-
-        val slotsBelowMinimum = flexibleSlots.filter { index ->
-            val proportionalHeight = remainingHeight *
-                    (durations[index].toFloat() / remainingDuration)
-            proportionalHeight < minHeight.value
-        }
-
-        if (slotsBelowMinimum.isEmpty()) {
-            flexibleSlots.forEach { index ->
-                heights[index] = remainingHeight *
-                        (durations[index].toFloat() / remainingDuration)
-            }
-            break
-        }
-
-        slotsBelowMinimum.forEach { index ->
-            heights[index] = minHeight.value
-            remainingHeight -= minHeight.value
-            flexibleSlots.remove(index)
-        }
-    }
-
-    return heights.map { it.dp }
 }
