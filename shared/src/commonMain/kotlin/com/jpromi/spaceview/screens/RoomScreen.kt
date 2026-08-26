@@ -62,9 +62,14 @@ import com.jpromi.spaceview.services.impl.DemoRoomService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun RoomScreen(
@@ -101,12 +106,17 @@ fun RoomScreen(
 
     LaunchedEffect(Unit) {
         while (true) {
-            val now = Clock.System.now()
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-            currentMinuteOfDay = now.hour * 60 + now.minute
-            currentTimeText = "${now.hour.twoDigits()}:${now.minute.twoDigits()}"
-            currentDateText = "${now.day.twoDigits()}.${(now.month.ordinal + 1).twoDigits()}.${now.year}"
-            delay(30_000)
+            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            currentMinuteOfDay = now.toMinuteOfDay()
+            currentTimeText = now.toTimeText();
+            currentDateText = now.format(LocalDateTime.Format {
+                day()
+                chars(".")
+                monthNumber()
+                chars(".")
+                year()
+            })
+            delay(30.seconds)
         }
     }
 
@@ -133,7 +143,7 @@ fun RoomScreen(
                 }
             }
             isLoadingAvailability = false
-            delay(30_000) // 30 seconds
+            delay(30.seconds) // 30 seconds
         }
     }
 
@@ -528,6 +538,8 @@ private fun calculateSlotHeights(
 
 private fun LocalDateTime.toMinuteOfDay(): Int = hour * 60 + minute
 
-private fun LocalDateTime.toTimeText(): String = "${hour.twoDigits()}:${minute.twoDigits()}"
-
-private fun Int.twoDigits(): String = toString().padStart(2, '0')
+private fun LocalDateTime.toTimeText(): String = this.format(LocalDateTime.Format {
+    hour()
+    chars(":")
+    minute()
+})
