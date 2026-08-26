@@ -50,6 +50,7 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.elements.AppInfoPopup
+import com.jpromi.spaceview.elements.roomscreen.DateTimeView
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.Room
@@ -60,6 +61,7 @@ import com.jpromi.spaceview.network.toUserMessage
 import com.jpromi.spaceview.services.RoomService
 import com.jpromi.spaceview.services.impl.DemoRoomService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
+import com.jpromi.spaceview.util.toMinuteOfDay
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -70,6 +72,7 @@ import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+import com.jpromi.spaceview.util.toTimeText
 
 @Composable
 fun RoomScreen(
@@ -85,8 +88,7 @@ fun RoomScreen(
     var isLoadingRoom by remember { mutableStateOf(true) }
     var isLoadingAvailability by remember { mutableStateOf(true) }
     var currentMinuteOfDay by remember { mutableStateOf(0) }
-    var currentTimeText by remember { mutableStateOf("--:--") }
-    var currentDateText by remember { mutableStateOf("--.--.----") }
+    var currentTime by remember { mutableStateOf<LocalDateTime>(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) }
 
     var isAdminPinPopupVisible by remember { mutableStateOf(false) }
     var isAppInfoPopupVisible by remember { mutableStateOf(false) }
@@ -106,16 +108,8 @@ fun RoomScreen(
 
     LaunchedEffect(Unit) {
         while (true) {
-            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            currentMinuteOfDay = now.toMinuteOfDay()
-            currentTimeText = now.toTimeText();
-            currentDateText = now.format(LocalDateTime.Format {
-                day()
-                chars(".")
-                monthNumber()
-                chars(".")
-                year()
-            })
+            val currentTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            currentMinuteOfDay = currentTime.toMinuteOfDay()
             delay(30.seconds)
         }
     }
@@ -169,19 +163,7 @@ fun RoomScreen(
             ) {
                 // Datetime
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = currentTimeText,
-                        modifier = Modifier.padding(bottom = 4.dp),
-                        fontWeight = FontWeight.W500,
-                        fontSize = 50.sp,
-                        color = AppTheme.textColor,
-                    )
-                    Text(
-                        text = currentDateText,
-                        fontWeight = FontWeight.W400,
-                        fontSize = 20.sp,
-                        color = AppTheme.textColor,
-                    )
+                    DateTimeView(currentTime)
                 }
 
                 // Name & Status
@@ -535,11 +517,3 @@ private fun calculateSlotHeights(
 
     return heights.map { it.dp }
 }
-
-private fun LocalDateTime.toMinuteOfDay(): Int = hour * 60 + minute
-
-private fun LocalDateTime.toTimeText(): String = this.format(LocalDateTime.Format {
-    hour()
-    chars(":")
-    minute()
-})
