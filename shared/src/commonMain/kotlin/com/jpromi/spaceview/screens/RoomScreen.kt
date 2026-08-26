@@ -252,8 +252,17 @@ fun RoomScreen(
                                     fontSize = 32.sp,
                                     lineHeight = 10.sp,
                                 )
+
+                                var freeUntil = roomUse?.slots.orEmpty().filter { slot ->
+                                    slot.start.toMinuteOfDay() > currentMinuteOfDay && slot.status == SlotStatus.BOOKED
+                                }.minByOrNull { slot -> slot.start.toMinuteOfDay() }?.end?.toTimeText()
+
+                                if (freeUntil == null)
+                                    freeUntil = roomUse?.slots.orEmpty()
+                                        .maxBy { slot -> slot.end.toMinuteOfDay() }.end.toTimeText()
+
                                 Text(
-                                    text = "bis xx:xx", // ToDo: Implement time until free
+                                    text = "bis ${freeUntil}",
                                     color = AppTheme.textColor,
                                     fontSize = 18.sp,
                                     lineHeight = 18.sp,
