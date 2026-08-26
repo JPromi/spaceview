@@ -51,6 +51,7 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.elements.AppInfoPopup
 import com.jpromi.spaceview.elements.roomscreen.DateTimeView
+import com.jpromi.spaceview.elements.roomscreen.NameStatusView
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.Room
@@ -88,7 +89,11 @@ fun RoomScreen(
     var isLoadingRoom by remember { mutableStateOf(true) }
     var isLoadingAvailability by remember { mutableStateOf(true) }
     var currentMinuteOfDay by remember { mutableStateOf(0) }
-    var currentTime by remember { mutableStateOf<LocalDateTime>(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) }
+    var currentTime by remember {
+        mutableStateOf<LocalDateTime>(
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        )
+    }
 
     var isAdminPinPopupVisible by remember { mutableStateOf(false) }
     var isAppInfoPopupVisible by remember { mutableStateOf(false) }
@@ -171,98 +176,7 @@ fun RoomScreen(
                     modifier = Modifier.weight(2f),
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text(
-                        text = room?.name ?: "",
-                        modifier = Modifier.padding(bottom = 4.dp),
-                        fontWeight = FontWeight.W500,
-                        fontSize = 30.sp,
-                        color = AppTheme.textColor,
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-
-                    // status
-                    Box(
-                        modifier = Modifier
-                            .border(
-                                width = 1.dp,
-                                color = if (roomUse?.currentEvent != null) {
-                                    AppTheme.busyTagBackground
-                                } else {
-                                    AppTheme.freeTagBackground
-                                },
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        if (roomUse?.currentEvent != null) {
-                                            AppTheme.busyTagBackground
-                                        } else {
-                                            AppTheme.freeTagBackground
-                                        }.copy(alpha = 0.25f),
-                                        Color.Transparent
-                                    ),
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                            )
-                            .padding(12.dp)
-                            .height(90.dp)
-                            .fillMaxWidth()
-                    ) {
-                        if (roomUse?.currentEvent != null) {
-                            // busy
-                            Column(
-                                modifier = Modifier
-                                    .padding(start = 6.dp)
-                                    .fillMaxHeight(),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Belegt",
-                                    color = AppTheme.textColor,
-                                    fontWeight = FontWeight.W700,
-                                    fontSize = 32.sp,
-                                    lineHeight = 10.sp,
-                                )
-                                // ToDo: Show current termin, remaining minutes,...
-                            }
-
-                        } else {
-                            // free
-                            Column(
-                                modifier = Modifier
-                                    .padding(start = 6.dp)
-                                    .fillMaxHeight(),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Frei",
-                                    color = AppTheme.textColor,
-                                    fontWeight = FontWeight.W700,
-                                    fontSize = 32.sp,
-                                    lineHeight = 10.sp,
-                                )
-
-                                var freeUntil = roomUse?.slots.orEmpty().filter { slot ->
-                                    slot.start.toMinuteOfDay() > currentMinuteOfDay && slot.status == SlotStatus.BOOKED
-                                }.minByOrNull { slot -> slot.start.toMinuteOfDay() }?.end?.toTimeText()
-
-                                if (freeUntil == null)
-                                    freeUntil = roomUse?.slots.orEmpty()
-                                        .maxBy { slot -> slot.end.toMinuteOfDay() }.end.toTimeText()
-
-                                Text(
-                                    text = "bis ${freeUntil}",
-                                    color = AppTheme.textColor,
-                                    fontSize = 18.sp,
-                                    lineHeight = 18.sp,
-                                )
-                            }
-                        }
-
-                    }
+                    NameStatusView(room, roomUse, currentMinuteOfDay)
                 }
 
                 Row(
