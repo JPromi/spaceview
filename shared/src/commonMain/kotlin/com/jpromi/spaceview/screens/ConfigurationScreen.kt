@@ -63,6 +63,7 @@ import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
 import com.jpromi.spaceview.elements.LibrariesView
+import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
 import com.jpromi.spaceview.elements.forms.SettingsNavigationButton
@@ -271,9 +272,9 @@ fun ConfigurationScreen(
         checkConnection()
     }
 
+    // Navigation Scrolling
     val scrollState = rememberLazyListState()
 
-    // Navigation Scrolling
     val providerSectionIndex = 0
     val calendarSectionIndex = 1
     val applicationSectionIndex = 2
@@ -382,19 +383,11 @@ fun ConfigurationScreen(
         )
 
         // Settings
-        LazyColumn(
+        ScrollColumn(
             state = scrollState,
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
-                .draggable(
-                    orientation = Orientation.Vertical,
-                    state = rememberDraggableState { delta ->
-                        coroutineScope.launch {
-                            scrollState.scrollBy(-delta)
-                        }
-                    },
-                ),
+                .fillMaxHeight(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
