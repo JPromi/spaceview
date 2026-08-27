@@ -286,6 +286,7 @@ fun ConfigurationScreen(
             calendarSectionIndex,
             applicationSectionIndex,
             adminSectionIndex,
+            licenseSectionIndex
         )
     }
     val activeSectionIndex by remember {
@@ -371,7 +372,7 @@ fun ConfigurationScreen(
                     SettingsNavigationButton(
                         text = "Licenses",
                         icon = Lucide.Paperclip,
-                        isActive = activeSectionIndex == adminSectionIndex,
+                        isActive = activeSectionIndex == licenseSectionIndex,
                         onClick = { scrollToSection(licenseSectionIndex) },
                     )
                 }
