@@ -1,0 +1,147 @@
+name: iOS App Store
+
+on:
+  push:
+    tags:
+      - "v*"
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Base version for develop build"
+        required: true
+        default: "0.0.0"
+
+jobs:
+  build:
+    runs-on: macos-latest
+    environment: App Store
+
+    if: >
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Determine version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+            RELEASE_NAME="v${VERSION_NAME}"
+          else
+            VERSION_NAME="${{ inputs.version }}"
+            RELEASE_NAME="${VERSION_NAME}-dev.${GITHUB_RUN_NUMBER}"
+          fi
+
+          if [[ ! "$VERSION_NAME" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+            echo "Invalid iOS version: $VERSION_NAME" >&2
+            echo "Use one to three period-separated integers, for example 1.0.0." >&2
+            exit 1
+          fi
+
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+          echo "RELEASE_NAME=$RELEASE_NAME" >> "$GITHUB_ENV"
+
+          echo "Version: $VERSION_NAME"
+          echo "Build: $GITHUB_RUN_NUMBER"
+
+      - name: Import signing certificate
+        uses: Apple-Actions/import-codesign-certs@v5
+        with:
+          p12-file-base64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+
+      - name: Install provisioning profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}" \
+            | base64 --decode \
+            > ~/Library/MobileDevice/Provisioning\ Profiles/spaceview.mobileprovision
+
+      - name: Build shared framework
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :shared:linkReleaseFrameworkIosArm64
+
+      - name: Archive iOS app
+        run: |
+          xcodebuild \
+            -project iosApp/SpaceView.xcodeproj \
+            -scheme "Space View" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/SpaceView.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${{ vars.APPLE_TEAM_ID }}" \
+            PROVISIONING_PROFILE_SPECIFIER="SpaceView App Store" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            MARKETING_VERSION="$VERSION_NAME" \
+            archive
+
+      - name: Create export options
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store-connect</string>
+      
+              <key>signingStyle</key>
+              <string>manual</string>
+      
+              <key>teamID</key>
+              <string>${{ vars.APPLE_TEAM_ID }}</string>
+      
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.jpromi.spaceview</key>
+                  <string>SpaceView App Store</string>
+              </dict>
+      
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA
+        run: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$RUNNER_TEMP/SpaceView.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spaceview-ios-${{ env.VERSION_NAME }}
+          path: ${{ runner.temp }}/export/*.ipa
+
+      - name: Upload to App Store Connect
+        uses: Apple-Actions/upload-testflight-build@v3
+        with:
+          app-path: ${{ runner.temp }}/export/SpaceView.ipa
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
