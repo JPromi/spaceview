@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,11 +28,42 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.BuildKonfig
+import com.jpromi.spaceview.elements.forms.SettingsButton
 
 @Composable
-fun AppInfoPopup(
-    onDismiss: () -> Unit
-) {
+fun rememberAppInfoPopupState(): AppInfoPopupState = remember { AppInfoPopupState() }
+
+class AppInfoPopupState internal constructor() {
+    internal var isVisible by mutableStateOf(false)
+        private set
+    internal val licences = PopupState()
+
+    fun open() {
+        licences.close()
+        isVisible = true
+    }
+
+    fun close() {
+        isVisible = false
+        licences.close()
+    }
+
+    internal fun openLicences() {
+        isVisible = false
+        licences.open()
+    }
+}
+
+@Composable
+fun AppInfoPopup(state: AppInfoPopupState) {
+    AppLicencesPopup(state = state.licences)
+    if (!state.isVisible) return
+
+    AppInfoPopupContent(onDismiss = state::close, onShowLicences = state::openLicences)
+}
+
+@Composable
+private fun AppInfoPopupContent(onDismiss: () -> Unit, onShowLicences: () -> Unit) {
 
     Popup(
         onDismissRequest = onDismiss,
@@ -85,6 +119,12 @@ fun AppInfoPopup(
                     color = AppTheme.borderSettings,
                 )
 
+                SettingsButton(
+                    text = "Show Licences",
+                    onClick = onShowLicences,
+                    modifier = Modifier.width(200.dp),
+                )
+
                 // Description
                 Text(
                     text = "Beschreibung",
@@ -97,5 +137,6 @@ fun AppInfoPopup(
                 )
             }
         }
+
     }
 }
