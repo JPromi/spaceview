@@ -1,6 +1,7 @@
 package com.jpromi.spaceview.elements
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +31,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import com.jpromi.spaceview.AppTheme
+import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.mikepenz.aboutlibraries.Libs
 import spaceview.shared.generated.resources.Res
 
@@ -60,32 +64,46 @@ fun AppLicencesPopup(
                     interactionSource = remember { MutableInteractionSource() },
                     onClick = state::close
                 ),
+            contentAlignment = Alignment.Center
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            ScrollColumn(
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier
+                    .fillMaxSize(0.9f)
+                    .background(
+                        color = AppTheme.background,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .fillMaxWidth(0.8f)
+                    .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(16.dp))
+                    .padding(24.dp)
+            ) {
                 for (library in libs?.libraries.orEmpty()) {
-                    Expandable(title = library.name)
-                    {
-                        Column(
-                            modifier = Modifier.padding(10.dp)
-                        ) {
-                            if (library.website != null) {
-                                Text(buildAnnotatedString {
-                                    append("Website: ")
-                                    withLink(
-                                        LinkAnnotation.Url(
-                                            library.website!!,
-                                            TextLinkStyles(style = SpanStyle(color = AppTheme.linkColor))
-                                        )
-                                    ) {
-                                        append(library.website)
-                                    }
-                                }, color = AppTheme.textColor)
-                            }
+                    item {
+                        Expandable(title = library.name)
+                        {
+                            Column(
+                                modifier = Modifier.padding(10.dp)
+                            ) {
+                                if (library.website != null) {
+                                    Text(buildAnnotatedString {
+                                        append("Website: ")
+                                        withLink(
+                                            LinkAnnotation.Url(
+                                                library.website!!,
+                                                TextLinkStyles(style = SpanStyle(color = AppTheme.linkColor))
+                                            )
+                                        ) {
+                                            append(library.website)
+                                        }
+                                    }, color = AppTheme.textColor)
+                                }
 
-                            for (licence in library.licenses) {
-                                Text("License: ${licence.name}", color = AppTheme.textColor)
-                                Spacer(Modifier.height(10.dp))
-                                Text(licence.licenseContent ?: "", color = AppTheme.textColor)
+                                for (licence in library.licenses) {
+                                    Text("License: ${licence.name}", color = AppTheme.textColor)
+                                    Spacer(Modifier.height(10.dp))
+                                    Text(licence.licenseContent ?: "", color = AppTheme.textColor)
+                                }
                             }
                         }
                     }

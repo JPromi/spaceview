@@ -49,17 +49,19 @@ class AppInfoPopupState internal constructor() {
     }
 
     internal fun openLicences() {
-        isVisible = false
         licences.open()
     }
 }
 
 @Composable
 fun AppInfoPopup(state: AppInfoPopupState) {
-    AppLicencesPopup(state = state.licences)
     if (!state.isVisible) return
 
-    AppInfoPopupContent(onDismiss = state::close, onShowLicences = state::openLicences)
+    if (state.licences.isVisible) {
+        AppLicencesPopup(state = state.licences)
+    } else {
+        AppInfoPopupContent(onDismiss = state::close, onShowLicences = state::openLicences)
+    }
 }
 
 @Composable
