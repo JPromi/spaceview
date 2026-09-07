@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -49,17 +52,19 @@ class AppInfoPopupState internal constructor() {
     }
 
     internal fun openLicences() {
-        isVisible = false
         licences.open()
     }
 }
 
 @Composable
 fun AppInfoPopup(state: AppInfoPopupState) {
-    AppLicencesPopup(state = state.licences)
     if (!state.isVisible) return
 
-    AppInfoPopupContent(onDismiss = state::close, onShowLicences = state::openLicences)
+    if (state.licences.isVisible) {
+        AppLicencesPopup(state = state.licences)
+    } else {
+        AppInfoPopupContent(onDismiss = state::close, onShowLicences = state::openLicences)
+    }
 }
 
 @Composable
@@ -68,6 +73,7 @@ private fun AppInfoPopupContent(onDismiss: () -> Unit, onShowLicences: () -> Uni
     Popup(
         onDismissRequest = onDismiss,
         alignment = Alignment.Center,
+        properties = fullScreenPopupProperties(),
     ) {
         Box(
             modifier = Modifier
@@ -77,7 +83,8 @@ private fun AppInfoPopupContent(onDismiss: () -> Unit, onShowLicences: () -> Uni
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
                     onClick = onDismiss
-                ),
+                )
+                .windowInsetsPadding(WindowInsets.safeDrawing),
         ) {
             Column(
                 modifier = Modifier

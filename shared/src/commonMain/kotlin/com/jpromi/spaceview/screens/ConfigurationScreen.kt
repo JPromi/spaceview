@@ -14,12 +14,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -62,7 +65,6 @@ import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
-import com.jpromi.spaceview.elements.LibrariesView
 import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
@@ -75,8 +77,10 @@ import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.models.CalendarProvider
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
+import com.jpromi.spaceview.network.toUserMessage
 import com.jpromi.spaceview.services.RoomService
 import com.jpromi.spaceview.services.impl.DemoRoomService
+import com.jpromi.spaceview.services.impl.IcsRoomService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import kotlinx.coroutines.launch
 import com.mikepenz.aboutlibraries.Libs
@@ -98,6 +102,7 @@ fun ConfigurationScreen(
     var selectedProvider by remember {
         mutableStateOf(calendarSettings.calendarProvider ?: CalendarProviderENUM.DEMO)
     }
+    var isCheckingConnection by remember { mutableStateOf(false) }
 
     // RoomVox
     var selectedRoomVoxServerUrl by remember {
@@ -106,7 +111,11 @@ fun ConfigurationScreen(
     var selectedRoomVoxToken by remember {
         mutableStateOf(calendarSettings.roomVoxAccessToken)
     }
-    var isCheckingRoomVoxConnection by remember { mutableStateOf(false) }
+
+    // ICS
+    var selectedIcsUrl by remember {
+        mutableStateOf(calendarSettings.icsUrl)
+    }
 
     // UI
     var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
@@ -141,6 +150,10 @@ fun ConfigurationScreen(
         when (selectedProvider) {
             CalendarProviderENUM.ROOMVOX -> {
                 roomService = RoomVoxRoomService()
+            }
+
+            CalendarProviderENUM.ICS -> {
+                roomService = IcsRoomService()
             }
 
             else -> {
@@ -179,41 +192,40 @@ fun ConfigurationScreen(
     }
 
     fun checkConnection() {
-        roomService.configure(
-            serverUrl = selectedRoomVoxServerUrl,
-            accessToken = selectedRoomVoxToken,
+        val provider = selectedProvider
+        val service = roomService
+        service.configure(
+            serverUrl = if (provider == CalendarProviderENUM.ICS) {
+                selectedIcsUrl
+            } else {
+                selectedRoomVoxServerUrl
+            },
+            accessToken = if (provider == CalendarProviderENUM.ROOMVOX) selectedRoomVoxToken else "",
         )
 
         coroutineScope.launch {
-            roomService.configure(
-                serverUrl = selectedRoomVoxServerUrl,
-                accessToken = selectedRoomVoxToken,
-            )
-
-            isCheckingRoomVoxConnection = true
+            isCheckingConnection = true
             remoteServerConnectionMessage = null
             remoteServerConnection = false
 
             loadedRooms = emptyList()
             loadRoomsMessage = null
 
-            remoteServerConnectionMessage = when (
-                roomService.checkCredentials()
-            ) {
-                is ApiResult.Success -> {
-                    remoteServerConnection = true
-                    loadRooms()
-                    "Verbunden"
+            try {
+                remoteServerConnectionMessage = when (val result = service.checkCredentials()) {
+                    is ApiResult.Success -> {
+                        remoteServerConnection = true
+                        if (provider == CalendarProviderENUM.ROOMVOX) {
+                            loadRooms()
+                        }
+                        "Verbunden"
+                    }
+
+                    is ApiResult.Error -> result.toUserMessage()
                 }
-
-                is ApiResult.Unauthorized -> "Token falsch"
-                is ApiResult.NetworkError -> "Network error"
-                is ApiResult.NotFound -> "Not found"
-                is ApiResult.Forbidden -> "Forbidden"
-                else -> "Unknown error"
+            } finally {
+                isCheckingConnection = false
             }
-
-            isCheckingRoomVoxConnection = false
         }
     }
 
@@ -235,11 +247,19 @@ fun ConfigurationScreen(
             calendarSettings.roomVoxAccessToken = ""
         }
 
+        // ICS
+        if (selectedProvider == CalendarProviderENUM.ICS) {
+            calendarSettings.icsUrl = selectedIcsUrl
+        } else {
+            calendarSettings.icsUrl = ""
+        }
+
         // set Room ID
         if (
             selectedProvider in listOf(
                 CalendarProviderENUM.ROOMVOX,
                 CalendarProviderENUM.DEMO,
+                CalendarProviderENUM.ICS
             )
         ) {
             calendarSettings.selectedRoomId = selectedRoomId
@@ -279,14 +299,12 @@ fun ConfigurationScreen(
     val calendarSectionIndex = 1
     val applicationSectionIndex = 2
     val adminSectionIndex = 3
-    val licenseSectionIndex = 4
     val sectionIndices = remember {
         listOf(
             providerSectionIndex,
             calendarSectionIndex,
             applicationSectionIndex,
-            adminSectionIndex,
-            licenseSectionIndex
+            adminSectionIndex
         )
     }
     val activeSectionIndex by remember {
@@ -313,7 +331,8 @@ fun ConfigurationScreen(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.background),
+            .background(AppTheme.background)
+            .windowInsetsPadding(WindowInsets.displayCutout),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // Sidebar
@@ -368,14 +387,6 @@ fun ConfigurationScreen(
                         onClick = { scrollToSection(adminSectionIndex) },
                     )
                 }
-                item {
-                    SettingsNavigationButton(
-                        text = "Licenses",
-                        icon = Lucide.Paperclip,
-                        isActive = activeSectionIndex == licenseSectionIndex,
-                        onClick = { scrollToSection(licenseSectionIndex) },
-                    )
-                }
             }
         }
 
@@ -408,6 +419,10 @@ fun ConfigurationScreen(
                             id = CalendarProviderENUM.ROOMVOX,
                             name = "RoomVox"
                         ),
+                        CalendarProvider(
+                            id = CalendarProviderENUM.ICS,
+                            name = "iCal"
+                        )
                     )
 
                     SettingsDropdown(
@@ -502,12 +517,84 @@ fun ConfigurationScreen(
                                     }
 
                                     SettingsButton(
-                                        text = if (isCheckingRoomVoxConnection) {
+                                        text = if (isCheckingConnection) {
                                             "Prüfe..."
                                         } else {
                                             "Prüfen"
                                         },
-                                        enabled = !isCheckingRoomVoxConnection,
+                                        enabled = !isCheckingConnection,
+                                        onClick = { checkConnection() },
+                                        modifier = Modifier.width(200.dp),
+                                    )
+                                }
+                            }
+                        }
+
+                        CalendarProviderENUM.ICS -> {
+                            SettingsSection(
+                                title = "iCal Provider",
+                                transparentBackground = true
+                            ) {
+                                SettingsTextInput(
+                                    label = "URL",
+                                    value = selectedIcsUrl,
+                                    onValueChange = {
+                                        selectedIcsUrl = it
+                                        remoteServerConnectionMessage = null
+                                        remoteServerConnection = false
+                                        loadedRooms = emptyList()
+                                    },
+                                    keyboardType = KeyboardType.Uri
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (remoteServerConnectionMessage != null) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
+                                            if (remoteServerConnection) {
+                                                Icon(
+                                                    imageVector = Lucide.CircleCheck,
+                                                    contentDescription = null,
+                                                    tint = AppTheme.textColorGreen,
+                                                )
+                                            } else {
+                                                Icon(
+                                                    imageVector = Lucide.CircleX,
+                                                    contentDescription = null,
+                                                    tint = AppTheme.textColorRed,
+                                                )
+                                            }
+
+
+                                            Text(
+                                                text = remoteServerConnectionMessage!!,
+                                                color =
+                                                    if (remoteServerConnection) {
+                                                        AppTheme.textColorGreen
+                                                    } else {
+                                                        AppTheme.textColorRed
+                                                    },
+                                            )
+                                        }
+                                    } else {
+                                        Spacer(
+                                            modifier = Modifier
+                                        )
+                                    }
+
+                                    SettingsButton(
+                                        text = if (isCheckingConnection) {
+                                            "Prüfe..."
+                                        } else {
+                                            "Prüfen"
+                                        },
+                                        enabled = !isCheckingConnection,
                                         onClick = { checkConnection() },
                                         modifier = Modifier.width(200.dp),
                                     )
@@ -525,17 +612,18 @@ fun ConfigurationScreen(
                 SettingsSection(
                     title = "Kalender"
                 ) {
-
-                    SettingsDropdown(
-                        label = "Raum auswählen",
-                        options = loadedRooms,
-                        selectedOption = loadedRooms.find { it.id == selectedRoomId }
-                            ?: loadedRooms.firstOrNull(),
-                        optionText = { room -> room.name },
-                        onOptionSelected = { room ->
-                            selectedRoomId = room.id
-                        }
-                    )
+                    if (selectedProvider == CalendarProviderENUM.ROOMVOX || selectedProvider == CalendarProviderENUM.DEMO) {
+                        SettingsDropdown(
+                            label = "Raum auswählen",
+                            options = loadedRooms,
+                            selectedOption = loadedRooms.find { it.id == selectedRoomId }
+                                ?: loadedRooms.firstOrNull(),
+                            optionText = { room -> room.name },
+                            onOptionSelected = { room ->
+                                selectedRoomId = room.id
+                            }
+                        )
+                    }
 
                     SettingsSwitch(
                         checked = showLogo,
@@ -617,12 +705,6 @@ fun ConfigurationScreen(
                         onClick = { save() },
                         modifier = Modifier.width(200.dp),
                     )
-                }
-            }
-
-            item {
-                SettingsSection(title = "Licenses") {
-                    LibrariesView()
                 }
             }
         }
