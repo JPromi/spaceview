@@ -62,7 +62,6 @@ import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
-import com.jpromi.spaceview.elements.LibrariesView
 import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
@@ -279,14 +278,12 @@ fun ConfigurationScreen(
     val calendarSectionIndex = 1
     val applicationSectionIndex = 2
     val adminSectionIndex = 3
-    val licenseSectionIndex = 4
     val sectionIndices = remember {
         listOf(
             providerSectionIndex,
             calendarSectionIndex,
             applicationSectionIndex,
-            adminSectionIndex,
-            licenseSectionIndex
+            adminSectionIndex
         )
     }
     val activeSectionIndex by remember {
@@ -366,14 +363,6 @@ fun ConfigurationScreen(
                         icon = Lucide.Shield,
                         isActive = activeSectionIndex == adminSectionIndex,
                         onClick = { scrollToSection(adminSectionIndex) },
-                    )
-                }
-                item {
-                    SettingsNavigationButton(
-                        text = "Licenses",
-                        icon = Lucide.Paperclip,
-                        isActive = activeSectionIndex == licenseSectionIndex,
-                        onClick = { scrollToSection(licenseSectionIndex) },
                     )
                 }
             }
@@ -601,12 +590,6 @@ fun ConfigurationScreen(
                         onClick = { save() },
                         modifier = Modifier.width(200.dp),
                     )
-                }
-            }
-
-            item {
-                SettingsSection(title = "Licenses") {
-                    LibrariesView()
                 }
             }
         }
