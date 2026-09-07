@@ -537,6 +537,22 @@ fun ConfigurationScreen(
                         }
                     )
 
+                    SettingsSwitch(
+                        checked = showLogo,
+                        onCheckedChange = {
+                            showLogo = it
+                        },
+                        text = "Show Logo",
+                    )
+
+                    SettingsSwitch(
+                        checked = showAddEvent,
+                        onCheckedChange = {
+                            showAddEvent = it
+                        },
+                        text = "Show Add Button",
+                    )
+
                     // allow edit
                 }
             }
