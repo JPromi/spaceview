@@ -52,6 +52,8 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.elements.AppInfoPopup
+import com.jpromi.spaceview.elements.rememberAppInfoPopupState
+import com.jpromi.spaceview.elements.rememberPopupState
 import com.jpromi.spaceview.elements.roomscreen.DateTimeView
 import com.jpromi.spaceview.elements.roomscreen.NameStatusView
 import com.jpromi.spaceview.elements.roomscreen.RoundIconButton
@@ -103,8 +105,8 @@ fun RoomScreen(
     }
     val coroutineScope = rememberCoroutineScope()
 
-    var isAdminPinPopupVisible by remember { mutableStateOf(false) }
-    var isAppInfoPopupVisible by remember { mutableStateOf(false) }
+    val adminPinPopup = rememberPopupState()
+    val appInfoPopup = rememberAppInfoPopupState()
 
 
     fun initRoomService() {
@@ -219,13 +221,13 @@ fun RoomScreen(
                     )
                     {
                         RoundIconButton(
-                            onClick = { isAppInfoPopupVisible = true },
+                            onClick = appInfoPopup::open,
                             icon = Lucide.Info
                         )
                         
                         RoundIconButton(
                             onClick = if (appSettings.adminPin.isNotEmpty()) {
-                                { isAdminPinPopupVisible = true }
+                                adminPinPopup::open
                             } else {
                                 onOpenConfiguration
                             }, icon = Lucide.Settings)
@@ -282,20 +284,12 @@ fun RoomScreen(
         }
     }
 
-    if (isAdminPinPopupVisible) {
-        AdminPinPopup(
-            onValidPinEnteredFunction = {
-                onOpenConfiguration()
-            },
-            onDismiss = { isAdminPinPopupVisible = false },
-            appSettings = appSettings
-        )
-    }
+    AdminPinPopup(
+        state = adminPinPopup,
+        onValidPinEnteredFunction = onOpenConfiguration,
+        appSettings = appSettings,
+    )
 
     // App Info Popup
-    if (isAppInfoPopupVisible) {
-        AppInfoPopup(
-            onDismiss = { isAppInfoPopupVisible = false }
-        )
-    }
+    AppInfoPopup(state = appInfoPopup)
 }
