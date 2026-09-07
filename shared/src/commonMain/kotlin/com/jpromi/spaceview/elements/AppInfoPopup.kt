@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,6 +73,7 @@ private fun AppInfoPopupContent(onDismiss: () -> Unit, onShowLicences: () -> Uni
     Popup(
         onDismissRequest = onDismiss,
         alignment = Alignment.Center,
+        properties = fullScreenPopupProperties(),
     ) {
         Box(
             modifier = Modifier
@@ -79,7 +83,8 @@ private fun AppInfoPopupContent(onDismiss: () -> Unit, onShowLicences: () -> Uni
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
                     onClick = onDismiss
-                ),
+                )
+                .windowInsetsPadding(WindowInsets.safeDrawing),
         ) {
             Column(
                 modifier = Modifier

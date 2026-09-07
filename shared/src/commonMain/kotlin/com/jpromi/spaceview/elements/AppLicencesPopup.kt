@@ -5,6 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -54,6 +57,7 @@ fun AppLicencesPopup(
     Popup(
         onDismissRequest = state::close,
         alignment = Alignment.Center,
+        properties = fullScreenPopupProperties(),
     ) {
         Box(
             modifier = Modifier
@@ -63,7 +67,8 @@ fun AppLicencesPopup(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
                     onClick = state::close
-                ),
+                )
+                .windowInsetsPadding(WindowInsets.safeDrawing),
             contentAlignment = Alignment.Center
         ) {
             ScrollColumn(
