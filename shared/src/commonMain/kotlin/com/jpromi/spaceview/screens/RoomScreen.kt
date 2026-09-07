@@ -86,7 +86,6 @@ import kotlin.time.Duration.Companion.seconds
 import com.jpromi.spaceview.util.toTimeText
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 @Composable
 fun RoomScreen(
