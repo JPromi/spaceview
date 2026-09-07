@@ -38,6 +38,13 @@ class CalendarSettings(
             settings.putString(KEY_ROOMVOX_ACCESS_TOKEN_PERMISSION, value)
         }
 
+    // ICS
+    var icsUrl: String
+        get() = settings.getString(KEY_ICS_URL, "")
+        set(value) {
+            settings.putString(KEY_ICS_URL, value)
+        }
+
     var selectedRoomId: String
         get() = settings.getString(KEY_SELECTED_ROOM_ID, "")
         set(value) {
@@ -62,6 +69,7 @@ class CalendarSettings(
         const val KEY_ROOMVOX_SERVER_URL = "calendar_roomvox_server_url"
         const val KEY_ROOMVOX_ACCESS_TOKEN = "calendar_roomvox_access_token"
         const val KEY_ROOMVOX_ACCESS_TOKEN_PERMISSION = "calendar_roomvox_access_token_permission"
+        const val KEY_ICS_URL = "calendar_ics_url"
         const val KEY_SELECTED_ROOM_ID = "calendar_selected_room_id"
         const val KEY_SHOW_ADD_EVENT = "calendar_selected_show_add_event"
         const val KEY_SHOW_LOGO = "calendar_selected_show_logo"

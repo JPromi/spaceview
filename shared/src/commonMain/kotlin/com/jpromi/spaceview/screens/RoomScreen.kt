@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -67,6 +70,7 @@ import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toUserMessage
 import com.jpromi.spaceview.services.RoomService
 import com.jpromi.spaceview.services.impl.DemoRoomService
+import com.jpromi.spaceview.services.impl.IcsRoomService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import com.jpromi.spaceview.util.toMinuteOfDay
 import kotlinx.coroutines.delay
@@ -112,6 +116,10 @@ fun RoomScreen(
         when (calendarSettings.calendarProvider) {
             CalendarProviderENUM.ROOMVOX -> {
                 roomService = RoomVoxRoomService()
+            }
+
+            CalendarProviderENUM.ICS -> {
+                roomService = IcsRoomService()
             }
 
             else -> {
@@ -169,6 +177,7 @@ fun RoomScreen(
             .fillMaxSize()
             .background(color = AppTheme.background)
             .padding(32.dp)
+            .windowInsetsPadding(WindowInsets.displayCutout)
     ) {
         if (isLoadingRoom || isLoadingAvailability) {
             // loading
