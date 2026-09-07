@@ -26,10 +26,6 @@ import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.models.RoomUse
 import com.jpromi.spaceview.util.toMinuteOfDay
 import com.jpromi.spaceview.util.toTimeText
-import kotlin.collections.filter
-import kotlin.collections.maxBy
-import kotlin.collections.minByOrNull
-import kotlin.collections.orEmpty
 
 @Composable
 fun NameStatusView(room: Room?, roomUse: RoomUse?, currentMinuteOfDay: Int) {
@@ -74,7 +70,11 @@ fun NameStatusView(room: Room?, roomUse: RoomUse?, currentMinuteOfDay: Int) {
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = if (roomUse?.currentEvent != null) "Belegt" else "Frei",
+                text = when {
+                    roomUse == null || roomUse.slots.isEmpty() -> "Unbekannt"
+                    roomUse.currentEvent != null -> "Belegt"
+                    else -> "Frei"
+                },
                 color = AppTheme.textColor,
                 fontWeight = FontWeight.W700,
                 fontSize = 32.sp,
@@ -83,7 +83,7 @@ fun NameStatusView(room: Room?, roomUse: RoomUse?, currentMinuteOfDay: Int) {
 
             if(roomUse?.currentEvent != null) {
                 Text(
-                    text = roomUse.currentEvent.title,
+                    text = roomUse.currentEvent.title ?: "",
                     color = AppTheme.textColor,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.W500,
@@ -91,20 +91,19 @@ fun NameStatusView(room: Room?, roomUse: RoomUse?, currentMinuteOfDay: Int) {
                 )
             }
 
-            var untilText : String?
-            if(roomUse?.currentEvent != null) {
+            val untilText = if (roomUse?.currentEvent != null) {
                 val end = roomUse.currentEvent.end.toRoomVoxLocalDateTimeOrNull()
-                untilText = "bis ${end?.toTimeText()} (${end?.toMinuteOfDay()?.minus(currentMinuteOfDay)} Minuten)"
-            }
-            else {
-                untilText = roomUse?.slots.orEmpty().filter { slot ->
-                    slot.start.toMinuteOfDay() > currentMinuteOfDay && slot.status == SlotStatus.BOOKED
-                }.minByOrNull { slot -> slot.start.toMinuteOfDay() }?.end?.toTimeText()
-
-                if (untilText == null)
-                    untilText = roomUse?.slots.orEmpty()
-                        .maxBy { slot -> slot.end.toMinuteOfDay() }.end.toTimeText()
-                untilText = "bis ${untilText}"
+                end?.let {
+                    "bis ${it.toTimeText()} (${it.toMinuteOfDay() - currentMinuteOfDay} Minuten)"
+                } ?: "Endzeit unbekannt"
+            } else {
+                val slots = roomUse?.slots.orEmpty()
+                val nextBookingStart = slots
+                    .filter { it.start.toMinuteOfDay() > currentMinuteOfDay && it.status == SlotStatus.BOOKED }
+                    .minByOrNull { it.start }
+                    ?.start
+                val freeUntil = nextBookingStart ?: slots.maxByOrNull { it.end }?.end
+                freeUntil?.let { "bis ${it.toTimeText()}" } ?: "Keine Verfügbarkeitsdaten"
             }
 
             Text(

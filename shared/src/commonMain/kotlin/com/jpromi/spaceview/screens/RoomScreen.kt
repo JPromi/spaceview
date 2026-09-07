@@ -70,6 +70,7 @@ import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toUserMessage
 import com.jpromi.spaceview.services.RoomService
 import com.jpromi.spaceview.services.impl.DemoRoomService
+import com.jpromi.spaceview.services.impl.IcsRoomService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import com.jpromi.spaceview.util.toMinuteOfDay
 import kotlinx.coroutines.delay
@@ -116,6 +117,10 @@ fun RoomScreen(
         when (calendarSettings.calendarProvider) {
             CalendarProviderENUM.ROOMVOX -> {
                 roomService = RoomVoxRoomService()
+            }
+
+            CalendarProviderENUM.ICS -> {
+                roomService = IcsRoomService()
             }
 
             else -> {
