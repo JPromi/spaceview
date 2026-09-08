@@ -21,6 +21,9 @@ Use the run configurations provided by the run widget in your IDE's toolbar. You
   - Hot reload: `./gradlew :desktopApp:hotRun --auto`
   - Standard run: `./gradlew :desktopApp:run`
 - iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+- Web app:
+  - JavaScript: `./gradlew :webApp:jsBrowserDevelopmentRun`
+  - Web Assembly: `./gradlew :webApp:wasmJsBrowserDevelopmentRun`
 
 ### Running tests
 
