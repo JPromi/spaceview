@@ -33,8 +33,6 @@ class NextcloudThemingService(
     override suspend fun getThemeColor(): Color? {
         val htmlBody = nextcloudService.getNextcloudPage("${resolvedBaseUrl}/SPACEVIEW_FORCE_ERROR")
 
-        print("URL: ${resolvedBaseUrl}/SPACEVIEW_FORCE_ERROR")
-
         if (htmlBody is ApiResult.Success) {
             val regex = Regex("""<meta\s+name=["']theme-color["']\s+content=["'](#[0-9a-fA-F]{6})["']""")
             val match = regex.find(htmlBody.data)
