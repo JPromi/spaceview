@@ -32,8 +32,10 @@ class NextcloudService {
         }
 
     suspend fun getNextcloudPage(url: String): ApiResult<String> =
-        executeNextcloudRequest { client ->
-            client.get(url.toHttpBaseUrl()).body<String>()
+        executeNextcloudRequest(expectSuccess = false) { client ->
+            client.get(url.toHttpBaseUrl()) {
+                accept(ContentType.Text.Html)
+            }.body<String>()
         }
 
     private suspend fun <T> executeNextcloudRequest(

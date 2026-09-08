@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class NextcloudThemingService(
     baseUrl: String,
-    private val nextcloudService: NextcloudService,
+    private val nextcloudService: NextcloudService = NextcloudService(),
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
 ) : ThemingService {
 
@@ -30,8 +30,10 @@ class NextcloudThemingService(
             }
         }
 
-    override suspend fun getThemeColor(): Color {
+    override suspend fun getThemeColor(): Color? {
         val htmlBody = nextcloudService.getNextcloudPage("${resolvedBaseUrl}/SPACEVIEW_FORCE_ERROR")
+
+        print("URL: ${resolvedBaseUrl}/SPACEVIEW_FORCE_ERROR")
 
         if (htmlBody is ApiResult.Success) {
             val regex = Regex("""<meta\s+name=["']theme-color["']\s+content=["'](#[0-9a-fA-F]{6})["']""")
@@ -47,7 +49,7 @@ class NextcloudThemingService(
             }
         }
 
-        return Color(255, 255, 255)
+        return null
     }
 
 }

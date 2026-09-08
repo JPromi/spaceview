@@ -10,7 +10,7 @@ interface ThemingService {
     // get Images
     // get ThemeColor
 
-    val baseUrl: String
+    var baseUrl: String
 
-    suspend fun getThemeColor(): Color
+    suspend fun getThemeColor(): Color?
 }
