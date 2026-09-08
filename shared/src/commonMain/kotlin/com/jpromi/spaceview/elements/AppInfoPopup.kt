@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import com.jpromi.spaceview.AppTheme
-import com.jpromi.spaceview.BuildKonfig
 import com.jpromi.spaceview.elements.forms.SettingsButton
+import com.jpromi.spaceview.util.appVersion
 
 @Composable
 fun rememberAppInfoPopupState(): AppInfoPopupState = remember { AppInfoPopupState() }
@@ -114,7 +114,7 @@ private fun AppInfoPopupContent(onDismiss: () -> Unit, onShowLicences: () -> Uni
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = "Version: ${BuildKonfig.APP_VERSION}",
+                            text = "Version: ${appVersion()}",
                             color = AppTheme.textColor.copy(alpha = 0.5f),
                             fontSize = 16.sp,
                         )
