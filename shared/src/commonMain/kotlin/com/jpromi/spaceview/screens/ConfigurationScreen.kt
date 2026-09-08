@@ -78,6 +78,7 @@ import com.jpromi.spaceview.models.CalendarProvider
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toUserMessage
+import com.jpromi.spaceview.services.NextcloudService
 import com.jpromi.spaceview.services.RoomService
 import com.jpromi.spaceview.services.impl.DemoRoomService
 import com.jpromi.spaceview.services.impl.IcsRoomService
@@ -97,6 +98,7 @@ fun ConfigurationScreen(
     calendarSettings: CalendarSettings = remember { CalendarSettings() },
 ) {
     var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
+    var nextcloudService by remember { mutableStateOf(NextcloudService()) }
     val fullscreenController = LocalFullscreenController.current;
 
     var selectedProvider by remember {
@@ -194,14 +196,6 @@ fun ConfigurationScreen(
     fun checkConnection() {
         val provider = selectedProvider
         val service = roomService
-        service.configure(
-            serverUrl = if (provider == CalendarProviderENUM.ICS) {
-                selectedIcsUrl
-            } else {
-                selectedRoomVoxServerUrl
-            },
-            accessToken = if (provider == CalendarProviderENUM.ROOMVOX) selectedRoomVoxToken else "",
-        )
 
         coroutineScope.launch {
             isCheckingConnection = true
@@ -212,6 +206,24 @@ fun ConfigurationScreen(
             loadRoomsMessage = null
 
             try {
+                val serverUrl = when (provider) {
+                    CalendarProviderENUM.ICS -> selectedIcsUrl
+                    CalendarProviderENUM.ROOMVOX -> {
+                        when (val result = nextcloudService.getNextcloudRootUrl(selectedRoomVoxServerUrl)) {
+                            is ApiResult.Success -> result.data ?: selectedRoomVoxServerUrl
+                            is ApiResult.Error -> selectedRoomVoxServerUrl
+                        }.also { selectedRoomVoxServerUrl = it }
+                    }
+                    else -> selectedRoomVoxServerUrl
+                }
+
+                print("\n${serverUrl}")
+
+                service.configure(
+                    serverUrl = serverUrl,
+                    accessToken = if (provider == CalendarProviderENUM.ROOMVOX) selectedRoomVoxToken else "",
+                )
+
                 remoteServerConnectionMessage = when (val result = service.checkCredentials()) {
                     is ApiResult.Success -> {
                         remoteServerConnection = true

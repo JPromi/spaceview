@@ -8,13 +8,16 @@ import kotlinx.coroutines.CancellationException
 suspend fun <T> executeRequest(
     invalidRequestMessage: String? = null,
     isRequestValid: () -> Boolean = { true },
+    expectSuccess: Boolean = true,
     request: suspend (HttpClient) -> T,
 ): ApiResult<T> {
     if (!isRequestValid()) {
         return ApiResult.InvalidRequest(invalidRequestMessage ?: "Ungueltige Anfrage.")
     }
 
-    val client = HttpClientFactory.create()
+    val client = HttpClientFactory.create(
+        expectSuccess = expectSuccess,
+    )
     return try {
         ApiResult.Success(request(client))
     } catch (error: ResponseException) {
@@ -37,7 +40,11 @@ suspend fun <T> executeRequest(
 }
 
 fun String.toHttpBaseUrl(): String {
-    val trimmedUrl = trim().trimEnd('/')
+    val trimmedUrl = trim()
+        .trimEnd('/')
+        .substringBefore('?')
+        .substringBefore('#')
+        .trimEnd('/')
 
     if (trimmedUrl.isBlank()) {
         return ""

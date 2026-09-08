@@ -20,8 +20,9 @@ object HttpClientFactory {
     fun create(
         baseUrl: String? = null,
         json: Json = defaultJson,
+        expectSuccess: Boolean = true,
     ): HttpClient = HttpClient(platformHttpClientEngine()) {
-        expectSuccess = true
+        this.expectSuccess = expectSuccess
 
         install(ContentNegotiation) {
             json(json)
