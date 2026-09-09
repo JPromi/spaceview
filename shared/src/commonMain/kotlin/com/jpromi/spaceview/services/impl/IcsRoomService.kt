@@ -107,6 +107,17 @@ class IcsRoomService(
 
     private data class EventTime(val event: Event, val start: LocalDateTime, val end: LocalDateTime)
 
+    // ToDo: Move this to an external mapping file
+    private companion object {
+        val windowsTimeZoneMappings = mapOf(
+            "W. Europe Standard Time" to "Europe/Berlin",
+            "Central Europe Standard Time" to "Europe/Budapest",
+            "Romance Standard Time" to "Europe/Paris",
+            "GMT Standard Time" to "Europe/London",
+            "UTC" to "UTC",
+        )
+    }
+
     // Not supported for ICS
     override suspend fun getRooms(): ApiResult<List<Room>> {
         return ApiResult.InvalidRequest("Not supported for ICS")
@@ -196,7 +207,7 @@ class IcsRoomService(
         ))
         val sourceZone = when {
             value.endsWith("Z") -> TimeZone.UTC
-            timeZoneId != null -> TimeZone.of(timeZoneId)
+            timeZoneId != null -> TimeZone.of(windowsTimeZoneMappings[timeZoneId] ?: timeZoneId)
             else -> return local
         }
         return local.toInstant(sourceZone).toLocalDateTime(TimeZone.currentSystemDefault())
