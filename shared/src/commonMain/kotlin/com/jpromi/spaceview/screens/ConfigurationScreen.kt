@@ -275,7 +275,7 @@ fun ConfigurationScreen(
             }
         }
 
-        // ToDo: Logo, Background, Images,...
+        // ToDo: Images,...
     }
 
     fun selectThemeColor(color: Color?) {
