@@ -21,11 +21,7 @@ class NextcloudService {
             expectSuccess = false,
             followRedirects = false,
         ) { client ->
-            val normalizedUrl = url.toHttpBaseUrl().toRedirectCheckUrl()
-            if (normalizedUrl.isLoginUrl()) {
-                return@executeNextcloudRequest normalizedUrl.removeLoginPath()
-            }
-
+            val normalizedUrl = url.toHttpBaseUrl()
             if (normalizedUrl.hasPathAfterHost()) {
                 return@executeNextcloudRequest normalizedUrl
             }
@@ -40,7 +36,7 @@ class NextcloudService {
                 val location = response.headers[HttpHeaders.Location]
                     ?: return@executeNextcloudRequest currentUrl.toRedirectCheckUrl().removeLoginPath()
 
-                currentUrl = currentUrl.resolveRedirectLocation(location).toRedirectCheckUrl()
+                currentUrl = currentUrl.resolveRedirectLocation(location)
                 if (currentUrl.isLoginUrl()) {
                     return@executeNextcloudRequest currentUrl.removeLoginPath()
                 }
@@ -93,7 +89,7 @@ class NextcloudService {
         toRedirectCheckUrl().removeSuffix("/login")
 
     private fun String.resolveRedirectLocation(location: String): String {
-        val trimmedLocation = location.trim().toRedirectCheckUrl()
+        val trimmedLocation = location.trim()
 
         if (trimmedLocation.startsWith("http://") || trimmedLocation.startsWith("https://")) {
             return trimmedLocation
