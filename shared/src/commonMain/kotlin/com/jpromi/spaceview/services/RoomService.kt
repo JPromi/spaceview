@@ -23,9 +23,6 @@ interface RoomService {
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
     ): ApiResult<List<Slot>>
-
-    // ToDo: REMOVE getLogoUrl, moved to Theme
-    fun getLogoUrl() : String
     suspend fun getRoomUse(
         roomId: String,
         date: LocalDate = Clock.System.now()

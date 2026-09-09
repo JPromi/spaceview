@@ -64,10 +64,6 @@ class DemoRoomService : RoomService {
     ): ApiResult<List<Slot>> =
         ApiResult.Success(createRoomUse(roomId, date).slots)
 
-    override fun getLogoUrl(): String {
-        return ""
-    }
-
     override suspend fun getRoomUse(
         roomId: String,
         date: LocalDate,
