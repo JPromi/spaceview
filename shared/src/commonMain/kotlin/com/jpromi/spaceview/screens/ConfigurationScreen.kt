@@ -148,6 +148,8 @@ fun ConfigurationScreen(
         Color(0xFF11BD65),
         Color(0xFFFF5700),
         Color(0xFF971956),
+        Color(0xFF8B5CF6),
+        Color(0xFF1687E8),
     )
 
     var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
@@ -726,60 +728,67 @@ fun ConfigurationScreen(
                         text = "Fullscreen",
                     )
 
-                    // Theme Color
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+                    // Theme color selector
+                    Column {
+                        // Title
+                        Text(
+                            text = "Primär Farbe",
+                            color = AppTheme.textColor,
+                            modifier = Modifier.padding(start = 5.dp)
+                        )
 
-                        // Color pallet
+                        // Theme Color
                         Row(
-                            modifier = Modifier
-                                .padding(bottom = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            // default colors
-                            for (color in defaultThemeColor) {
-                                SettingsColorButton(
-                                    color = color,
-                                    selected = selectedThemeColor == color,
-                                    onClick = {
-                                        selectThemeColor(color)
-                                    },
-                                )
-                            }
 
-                            // Nextcloud Theme
-                            themeColor?.let {
-                                SettingsColorButton(
-                                    color = it,
-                                    selected = selectedThemeColor == it,
-                                    onClick = {
-                                        selectThemeColor(it)
-                                    },
-                                )
-                            }
-                        }
+                            // Color pallet
+                            Row(
+                                modifier = Modifier
+                                    .padding(bottom = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                // default colors
+                                for (color in defaultThemeColor) {
+                                    SettingsColorButton(
+                                        color = color,
+                                        selected = selectedThemeColor == color,
+                                        onClick = {
+                                            selectThemeColor(color)
+                                        },
+                                    )
+                                }
 
-
-//                        Spacer(modifier = Modifier.fillMaxWidth())
-
-                        // custom
-                        SettingsTextInput(
-                            label = "",
-                            placeholder = "#FFFFFF",
-                            modifier = Modifier.width(200.dp),
-                            value = inputThemeColor,
-                            rules = ruleHexColor,
-                            onValueChange = { value ->
-                                inputThemeColor = value
-
-                                if (ruleHexColor.isValid(value)) {
-                                    selectedThemeColor = value.toColor()
+                                // Nextcloud Theme
+                                themeColor?.let {
+                                    SettingsColorButton(
+                                        color = it,
+                                        selected = selectedThemeColor == it,
+                                        onClick = {
+                                            selectThemeColor(it)
+                                        },
+                                    )
                                 }
                             }
-                        )
+
+                            // custom
+                            SettingsTextInput(
+                                label = "",
+                                placeholder = "#FFFFFF",
+                                modifier = Modifier.width(200.dp),
+                                value = inputThemeColor,
+                                rules = ruleHexColor,
+                                onValueChange = { value ->
+                                    inputThemeColor = value
+
+                                    if (ruleHexColor.isValid(value)) {
+                                        selectedThemeColor = value.toColor()
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
