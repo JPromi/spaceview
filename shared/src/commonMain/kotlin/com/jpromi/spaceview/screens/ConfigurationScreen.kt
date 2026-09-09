@@ -139,7 +139,7 @@ fun ConfigurationScreen(
     var selectedThemeColor: Color? by remember { mutableStateOf(appSettings.themeColor) }
     var inputThemeColor: String by remember { mutableStateOf(appSettings.themeColor?.toHexCode() ?: "") }
     val ruleHexColor = TextInputRules(
-        regex = Regex("""^#[0-9A-Fa-f]{6}?$"""),
+        regex = Regex("""^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"""),
         maxLength = 7,
         allowEmpty = false,
         errorMessage = "Ungültige HEX-Farbe"
