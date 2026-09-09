@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -78,9 +79,12 @@ import com.jpromi.spaceview.models.CalendarProvider
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toUserMessage
+import com.jpromi.spaceview.services.NextcloudService
 import com.jpromi.spaceview.services.RoomService
+import com.jpromi.spaceview.services.ThemingService
 import com.jpromi.spaceview.services.impl.DemoRoomService
 import com.jpromi.spaceview.services.impl.IcsRoomService
+import com.jpromi.spaceview.services.impl.NextcloudThemingService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import kotlinx.coroutines.launch
 import com.mikepenz.aboutlibraries.Libs
@@ -97,6 +101,8 @@ fun ConfigurationScreen(
     calendarSettings: CalendarSettings = remember { CalendarSettings() },
 ) {
     var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
+    var themingService by remember { mutableStateOf<ThemingService?>(null) }
+    var nextcloudService by remember { mutableStateOf(NextcloudService()) }
     val fullscreenController = LocalFullscreenController.current;
 
     var selectedProvider by remember {
@@ -145,11 +151,16 @@ fun ConfigurationScreen(
 
     var isLoadingRooms by remember { mutableStateOf(false) }
     var loadRoomsMessage by remember { mutableStateOf<String?>(null) }
+    var themeColor by remember { mutableStateOf<Color?>(null) }
 
-    fun initRoomService() {
+    fun selectCalendarProvider(provider: CalendarProviderENUM) {
+        selectedProvider = provider
+        themingService = null
+
         when (selectedProvider) {
             CalendarProviderENUM.ROOMVOX -> {
                 roomService = RoomVoxRoomService()
+                themingService = NextcloudThemingService(selectedRoomVoxServerUrl)
             }
 
             CalendarProviderENUM.ICS -> {
@@ -191,17 +202,20 @@ fun ConfigurationScreen(
         }
     }
 
+    suspend fun loadTheme() {
+        // Color
+        themeColor = if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
+            themingService?.getThemeColor()
+        } else {
+            null
+        }
+
+        // ToDo: Logo, Background, Images,...
+    }
+
     fun checkConnection() {
         val provider = selectedProvider
         val service = roomService
-        service.configure(
-            serverUrl = if (provider == CalendarProviderENUM.ICS) {
-                selectedIcsUrl
-            } else {
-                selectedRoomVoxServerUrl
-            },
-            accessToken = if (provider == CalendarProviderENUM.ROOMVOX) selectedRoomVoxToken else "",
-        )
 
         coroutineScope.launch {
             isCheckingConnection = true
@@ -211,12 +225,32 @@ fun ConfigurationScreen(
             loadedRooms = emptyList()
             loadRoomsMessage = null
 
+            themeColor = null
+
             try {
+                val serverUrl = when (provider) {
+                    CalendarProviderENUM.ICS -> selectedIcsUrl
+                    CalendarProviderENUM.ROOMVOX -> {
+                        when (val result = nextcloudService.getNextcloudRootUrl(selectedRoomVoxServerUrl)) {
+                            is ApiResult.Success -> result.data ?: selectedRoomVoxServerUrl
+                            is ApiResult.Error -> selectedRoomVoxServerUrl
+                        }.also { selectedRoomVoxServerUrl = it }
+                    }
+                    else -> selectedRoomVoxServerUrl
+                }
+
+                service.configure(
+                    serverUrl = serverUrl,
+                    accessToken = if (provider == CalendarProviderENUM.ROOMVOX) selectedRoomVoxToken else "",
+                )
+
                 remoteServerConnectionMessage = when (val result = service.checkCredentials()) {
                     is ApiResult.Success -> {
                         remoteServerConnection = true
                         if (provider == CalendarProviderENUM.ROOMVOX) {
                             loadRooms()
+                            themingService?.baseUrl = selectedRoomVoxServerUrl
+                            loadTheme()
                         }
                         "Verbunden"
                     }
@@ -288,7 +322,7 @@ fun ConfigurationScreen(
 
     // on open
     LaunchedEffect(Unit) {
-        initRoomService()
+        selectCalendarProvider(selectedProvider)
         checkConnection()
     }
 
@@ -434,8 +468,7 @@ fun ConfigurationScreen(
                             remoteServerConnectionMessage = null
                             remoteServerConnection = false
                             loadedRooms = emptyList()
-                            selectedProvider = provider.id
-                            initRoomService()
+                            selectCalendarProvider(provider.id)
 
                             if (selectedProvider == CalendarProviderENUM.DEMO) {
                                 checkConnection()
@@ -458,6 +491,8 @@ fun ConfigurationScreen(
                                         remoteServerConnectionMessage = null
                                         remoteServerConnection = false
                                         loadedRooms = emptyList()
+
+                                        themingService?.let { it.baseUrl = selectedRoomVoxServerUrl }
                                     },
                                     keyboardType = KeyboardType.Uri
                                 )
@@ -655,6 +690,16 @@ fun ConfigurationScreen(
                         },
                         text = "Fullscreen",
                     )
+
+                    // only Nextcloud
+                    if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
+                        Box(
+                            modifier = Modifier
+                                .width(60.dp)
+                                .height(60.dp)
+                                .background(themeColor ?: Color(0, 0, 0))
+                        )
+                    }
                 }
             }
 
