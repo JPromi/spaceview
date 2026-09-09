@@ -14,18 +14,24 @@ private enum class Screen {
 @Composable
 @Preview
 fun App() {
-    val appSettings = AppSettings();
+    val appSettings = remember { AppSettings() }
+    var themeColor by remember { mutableStateOf(appSettings.themeColor) }
     LocalFullscreenController.current?.setFullscreen(appSettings.fullscreen);
 
-    AppTheme {
+    AppTheme(themeColor = themeColor) {
         var currentScreen by remember { mutableStateOf(Screen.Room) }
 
         when (currentScreen) {
             Screen.Configuration -> ConfigurationScreen(
-                onGoBack = { currentScreen = Screen.Room }
+                onGoBack = {
+                    themeColor = appSettings.themeColor
+                    currentScreen = Screen.Room
+                },
+                appSettings = appSettings,
             )
             Screen.Room -> RoomScreen(
                 onOpenConfiguration = { currentScreen = Screen.Configuration },
+                appSettings = appSettings,
             )
         }
     }

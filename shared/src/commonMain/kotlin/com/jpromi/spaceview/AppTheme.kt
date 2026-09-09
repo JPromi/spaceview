@@ -4,6 +4,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -15,7 +17,9 @@ import spaceview.shared.generated.resources.Res
 
 object AppTheme {
     val background = Color(0xff05152C)
-    val primary = Color(0xFF11BD65)
+    private val defaultPrimary = Color(0xFF11BD65)
+    val primary: Color
+        @Composable get() = LocalPrimaryColor.current
     val textColor = Color(0xffffffff)
     val textColorGreen = Color(0xff4caf50)
     val textColorRed = Color(0xfff44336)
@@ -31,24 +35,30 @@ object AppTheme {
     val borderSettings = Color(0x30f5f5f5)
     val linkColor = Color(0xff778FDC)
 
-    private val colorScheme = darkColorScheme(
-        primary = primary,
-        background = background,
-        surface = background,
-        onPrimary = textColor,
-        onBackground = textColor,
-        onSurface = textColor,
-        error = busyTagBackground,
-        onError = busyTabTextColor,
-    )
+    private val LocalPrimaryColor = staticCompositionLocalOf { defaultPrimary }
 
     @Composable
-    operator fun invoke(content: @Composable () -> Unit) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = Typography(fontFamily = montserratFontFamily()),
-            content = content,
-        )
+    operator fun invoke(
+        themeColor: Color? = null,
+        content: @Composable () -> Unit,
+    ) {
+        val primaryColor = themeColor ?: defaultPrimary
+        CompositionLocalProvider(LocalPrimaryColor provides primaryColor) {
+            MaterialTheme(
+                colorScheme = darkColorScheme(
+                    primary = primaryColor,
+                    background = background,
+                    surface = background,
+                    onPrimary = textColor,
+                    onBackground = textColor,
+                    onSurface = textColor,
+                    error = busyTagBackground,
+                    onError = busyTabTextColor,
+                ),
+                typography = Typography(fontFamily = montserratFontFamily()),
+                content = content,
+            )
+        }
     }
 
     @Composable

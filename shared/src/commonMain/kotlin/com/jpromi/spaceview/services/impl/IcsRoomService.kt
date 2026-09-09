@@ -127,9 +127,6 @@ class IcsRoomService(
         return ApiResult.InvalidRequest("Not supported for ICS")
     }
 
-    override fun getLogoUrl(): String = ""
-
-
     // execute request
     private suspend fun <T> executeIcsRequest(request: suspend (HttpClient) -> T): ApiResult<T> =
         executeRequest(

@@ -57,12 +57,6 @@ class CalendarSettings(
             settings.putBoolean(KEY_SHOW_ADD_EVENT, value)
         }
 
-    var showLogo: Boolean
-        get() = settings.getBoolean(KEY_SHOW_LOGO, true)
-        set(value) {
-            settings.putBoolean(KEY_SHOW_LOGO, value)
-        }
-
 
     private companion object {
         const val KEY_PROVIDER = "calendar_provider"
@@ -72,6 +66,5 @@ class CalendarSettings(
         const val KEY_ICS_URL = "calendar_ics_url"
         const val KEY_SELECTED_ROOM_ID = "calendar_selected_room_id"
         const val KEY_SHOW_ADD_EVENT = "calendar_selected_show_add_event"
-        const val KEY_SHOW_LOGO = "calendar_selected_show_logo"
     }
 }

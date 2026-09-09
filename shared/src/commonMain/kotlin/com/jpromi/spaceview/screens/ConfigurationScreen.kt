@@ -21,13 +21,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFromBaseline
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +47,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -53,6 +59,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.composables.icons.lucide.Calendar
 import com.composables.icons.lucide.CircleCheck
 import com.composables.icons.lucide.CircleX
@@ -66,16 +73,21 @@ import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
+import com.jpromi.spaceview.elements.SettingsImageSelectPopup
 import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.jpromi.spaceview.elements.forms.SettingsButton
+import com.jpromi.spaceview.elements.forms.SettingsColorButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
 import com.jpromi.spaceview.elements.forms.SettingsNavigationButton
 import com.jpromi.spaceview.elements.forms.SettingsSection
 import com.jpromi.spaceview.elements.forms.SettingsSwitch
 import com.jpromi.spaceview.elements.forms.SettingsTextInput
 import com.jpromi.spaceview.elements.forms.TextInputRules
+import com.jpromi.spaceview.elements.rememberPopupState
+import com.jpromi.spaceview.enums.AssetSourceType
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.models.CalendarProvider
+import com.jpromi.spaceview.models.Image
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toUserMessage
@@ -86,6 +98,8 @@ import com.jpromi.spaceview.services.impl.DemoRoomService
 import com.jpromi.spaceview.services.impl.IcsRoomService
 import com.jpromi.spaceview.services.impl.NextcloudThemingService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
+import com.jpromi.spaceview.util.toColor
+import com.jpromi.spaceview.util.toHexCode
 import kotlinx.coroutines.launch
 import com.mikepenz.aboutlibraries.Libs
 import spaceview.shared.generated.resources.Res
@@ -125,7 +139,31 @@ fun ConfigurationScreen(
 
     // UI
     var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
-    var showLogo by remember { mutableStateOf(calendarSettings.showLogo) }
+
+    val logoSelectPopup = rememberPopupState()
+    var themeLogo: Image? by remember { mutableStateOf(null) }
+    var selectedThemeLogo: Image? by remember { mutableStateOf(appSettings.logo) }
+
+    val backgroundImageSelectPopup = rememberPopupState()
+    var themeBackgroundImage: Image? by remember { mutableStateOf(null) }
+    var selectedThemeBackgroundImage: Image? by remember { mutableStateOf(appSettings.backgroundImage) }
+
+    // Theme Color
+    var selectedThemeColor: Color? by remember { mutableStateOf(appSettings.themeColor) }
+    var inputThemeColor: String by remember { mutableStateOf(appSettings.themeColor?.toHexCode() ?: "") }
+    val ruleHexColor = TextInputRules(
+        regex = Regex("""^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"""),
+        maxLength = 7,
+        allowEmpty = false,
+        errorMessage = "Ungültige HEX-Farbe"
+    )
+    val defaultThemeColor: List<Color> = listOf(
+        Color(0xFF11BD65),
+        Color(0xFFFF5700),
+        Color(0xFF971956),
+        Color(0xFF8B5CF6),
+        Color(0xFF1687E8),
+    )
 
     var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
 
@@ -210,7 +248,43 @@ fun ConfigurationScreen(
             null
         }
 
+        // Logo / Background Image
+        if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
+            val logoUrl = themingService?.getLogo()
+            if (logoUrl != null) {
+                themeLogo = Image(
+                    AssetSourceType.REMOTE,
+                    "Nextcloud Logo",
+                    "Your Nextcloud Server",
+                    logoUrl,
+                )
+            } else {
+                themeLogo = null
+            }
+
+            val backgroundUrl = themingService?.getBackgroundImage()
+            if (backgroundUrl != null) {
+                themeBackgroundImage = Image(
+                    AssetSourceType.REMOTE,
+                    "Nextcloud Background",
+                    "Your Nextcloud Server",
+                    backgroundUrl,
+                )
+            } else {
+                themeBackgroundImage = null
+            }
+        }
+
         // ToDo: Logo, Background, Images,...
+    }
+
+    fun selectThemeColor(color: Color?) {
+        selectedThemeColor = color
+        if (color != null) {
+            inputThemeColor = color.toHexCode()
+        } else {
+            inputThemeColor = ""
+        }
     }
 
     fun checkConnection() {
@@ -301,8 +375,12 @@ fun ConfigurationScreen(
             calendarSettings.selectedRoomId = ""
         }
 
+        // UI / Theme
         calendarSettings.showAddEvent = showAddEvent;
-        calendarSettings.showLogo = showLogo
+
+        appSettings.themeColor = selectedThemeColor
+        appSettings.logo = selectedThemeLogo
+        appSettings.backgroundImage = selectedThemeBackgroundImage
 
         // Admin
         if (adminPinActive) {
@@ -661,14 +739,6 @@ fun ConfigurationScreen(
                     }
 
                     SettingsSwitch(
-                        checked = showLogo,
-                        onCheckedChange = {
-                            showLogo = it
-                        },
-                        text = "Show Logo",
-                    )
-
-                    SettingsSwitch(
                         checked = showAddEvent,
                         onCheckedChange = {
                             showAddEvent = it
@@ -691,13 +761,148 @@ fun ConfigurationScreen(
                         text = "Fullscreen",
                     )
 
-                    // only Nextcloud
-                    if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
-                        Box(
+                    // Theme color selector
+                    Column {
+                        // Title
+                        Text(
+                            text = "Primär Farbe",
+                            color = AppTheme.textColor,
+                        )
+
+                        // Theme Color
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+
+                            // Color pallet
+                            Row(
+                                modifier = Modifier
+                                    .padding(bottom = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                // default colors
+                                for (color in defaultThemeColor) {
+                                    SettingsColorButton(
+                                        color = color,
+                                        selected = selectedThemeColor == color,
+                                        onClick = {
+                                            selectThemeColor(color)
+                                        },
+                                    )
+                                }
+
+                                // Nextcloud Theme
+                                themeColor?.let {
+                                    SettingsColorButton(
+                                        color = it,
+                                        selected = selectedThemeColor == it,
+                                        onClick = {
+                                            selectThemeColor(it)
+                                        },
+                                    )
+                                }
+                            }
+
+                            // custom
+                            SettingsTextInput(
+                                label = "",
+                                placeholder = "#FFFFFF",
+                                modifier = Modifier.width(200.dp),
+                                value = inputThemeColor,
+                                rules = ruleHexColor,
+                                onValueChange = { value ->
+                                    inputThemeColor = value
+
+                                    if (ruleHexColor.isValid(value)) {
+                                        selectedThemeColor = value.toColor()
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    // Logo
+                    Column {
+                        // Title
+                        Text(
+                            text = "Logo",
+                            color = AppTheme.textColor,
+                        )
+
+                        Column(
                             modifier = Modifier
-                                .width(60.dp)
-                                .height(60.dp)
-                                .background(themeColor ?: Color(0, 0, 0))
+                                .size(150.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
+                                .background(AppTheme.background)
+                                .clickable {
+                                    logoSelectPopup.open()
+                                }
+                        ) {
+                            selectedThemeLogo?.let {
+                                AsyncImage(
+                                    model = it.path,
+                                    contentDescription = it.description,
+
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .fillMaxSize()
+                                )
+                            }
+                        }
+
+                        SettingsImageSelectPopup(
+                            state = logoSelectPopup,
+                            title = "Logo auswählen",
+                            images = themeLogo?.let { listOf(it) } ?: emptyList(),
+                            onSelect = { logo ->
+                                selectedThemeLogo = logo
+                                logoSelectPopup.close()
+                            }
+                        )
+                    }
+
+                    // Background Image
+                    Column {
+                        // Title
+                        Text(
+                            text = "Hintergrundbild",
+                            color = AppTheme.textColor,
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .height(150.dp)
+                                .width(250.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
+                                .background(AppTheme.background)
+                                .clickable {
+                                    backgroundImageSelectPopup.open()
+                                }
+                        ) {
+                            selectedThemeBackgroundImage?.let {
+                                AsyncImage(
+                                    model = it.path,
+                                    contentDescription = it.description,
+
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    contentScale = ContentScale.FillBounds,
+                                )
+                            }
+                        }
+
+                        SettingsImageSelectPopup(
+                            state = backgroundImageSelectPopup,
+                            title = "Hintergrundbild auswählen",
+                            images = themeBackgroundImage?.let { listOf(it) } ?: emptyList(),
+                            onSelect = { backgroundImage ->
+                                selectedThemeBackgroundImage = backgroundImage
+                                backgroundImageSelectPopup.close()
+                            }
                         )
                     }
                 }
