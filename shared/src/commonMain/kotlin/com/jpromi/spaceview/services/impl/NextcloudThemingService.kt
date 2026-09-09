@@ -45,18 +45,28 @@ class NextcloudThemingService(
     }
 
     override suspend fun getLogo(): String? {
-        val requestUrl = "${baseUrl.removeIndexPhp()}/core/css/guest.scss"
-        val defaultCss = nextcloudService.getNextcloudPage(requestUrl)
+        var requestUrl = "${baseUrl}/apps/theming/theme/dark.css"
+        val darkCss = nextcloudService.getNextcloudPage(requestUrl)
 
-        if (defaultCss is ApiResult.Success) {
-            // check variable
+        println(requestUrl)
+
+        if (darkCss is ApiResult.Success) {
+            val defaultRegex = Regex("""background-image\s*:\s*var\(\s*--image-logo\s*,\s*url\(\s*['"]?([^'")]+)['"]?\s*\)\s*\)""")
             val varRegex = Regex("""--image-logo\s*:\s*url\(\s*['"]?([^'")]+)['"]?\s*\)""")
-            var match = varRegex.find(defaultCss.data)
+
+            // var
+            var match = varRegex.find(darkCss.data)
 
             if (match == null) {
-                // check default logo
-                val defaultRegex = Regex("""background-image\s*:\s*var\(\s*--image-logo\s*,\s*url\(\s*['"]?([^'")]+)['"]?\s*\)\s*\)""")
-                match = defaultRegex.find(defaultCss.data)
+                // default fallback
+                requestUrl = "${baseUrl.removeIndexPhp()}/core/css/guest.css"
+                val guestCss = nextcloudService.getNextcloudPage(requestUrl)
+
+                if (guestCss is ApiResult.Success) {
+                    match = defaultRegex.find(guestCss.data)
+                } else {
+                    return null
+                }
             }
 
             return getNextcloudImageUrl(match?.groupValues[1], requestUrl)
@@ -97,6 +107,15 @@ class NextcloudThemingService(
         if (path != null) {
             if (path.startsWith("http")) {
                 return path
+            }
+
+            if (path.startsWith("/")) {
+                _baseUrl = _baseUrl
+                    .substringBefore("://")
+                    .let { scheme ->
+                        val rest = _baseUrl.substringAfter("://")
+                        "$scheme://${rest.substringBefore('/')}"
+                    }
             }
 
             val lastPart = path.substringAfterLast('/')
