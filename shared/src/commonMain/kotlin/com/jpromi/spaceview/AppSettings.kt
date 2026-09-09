@@ -2,12 +2,19 @@ package com.jpromi.spaceview
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import com.jpromi.spaceview.enums.AssetSourceType
+import com.jpromi.spaceview.models.Image
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.get
+import kotlinx.serialization.json.Json
 
 class AppSettings(
     private val settings: Settings = Settings()
 ) {
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
+
     var adminPin: String
         get() = settings.getString(KEY_ADMIN_PIN, "")
         set(value) {
@@ -34,10 +41,28 @@ class AppSettings(
             }
         }
 
+    var logo: Image?
+        get() = settings.getStringOrNull(KEY_THEME_LOGO)?.let {
+            runCatching {
+                json.decodeFromString<Image>(it)
+            }.getOrNull()
+        }
+        set(value) {
+            if (value != null) {
+                settings.putString(
+                    KEY_THEME_LOGO,
+                    json.encodeToString(value)
+                )
+            } else {
+                settings.remove(KEY_THEME_LOGO)
+            }
+        }
+
 
     private companion object {
         const val KEY_ADMIN_PIN = "admin_pin"
         const val KEY_FULLSCREEN = "selected_fullscreen"
         const val KEY_THEME_COLOR = "theme_color"
+        const val KEY_THEME_LOGO = "theme_logo"
     }
 }

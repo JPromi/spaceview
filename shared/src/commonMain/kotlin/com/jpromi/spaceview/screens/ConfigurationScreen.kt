@@ -58,6 +58,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.composables.icons.lucide.Calendar
 import com.composables.icons.lucide.CircleCheck
 import com.composables.icons.lucide.CircleX
@@ -71,6 +72,7 @@ import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
+import com.jpromi.spaceview.elements.SettingsImageSelectPopup
 import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.forms.SettingsColorButton
@@ -80,8 +82,11 @@ import com.jpromi.spaceview.elements.forms.SettingsSection
 import com.jpromi.spaceview.elements.forms.SettingsSwitch
 import com.jpromi.spaceview.elements.forms.SettingsTextInput
 import com.jpromi.spaceview.elements.forms.TextInputRules
+import com.jpromi.spaceview.elements.rememberPopupState
+import com.jpromi.spaceview.enums.AssetSourceType
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.models.CalendarProvider
+import com.jpromi.spaceview.models.Image
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toUserMessage
@@ -133,7 +138,10 @@ fun ConfigurationScreen(
 
     // UI
     var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
-    var showLogo by remember { mutableStateOf(calendarSettings.showLogo) }
+
+    val logoSelectPopup = rememberPopupState()
+    var themeLogo: Image? by remember { mutableStateOf(null) }
+    var selectedThemeLogo: Image? by remember { mutableStateOf(appSettings.logo) }
 
     // Theme Color
     var selectedThemeColor: Color? by remember { mutableStateOf(appSettings.themeColor) }
@@ -233,6 +241,22 @@ fun ConfigurationScreen(
             themingService?.getThemeColor()
         } else {
             null
+        }
+
+        // Logo
+        if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
+            val logoUrl = themingService?.getLogo()
+
+            if (logoUrl != null) {
+                themeLogo = Image(
+                    AssetSourceType.REMOTE,
+                    "Nextcloud Logo",
+                    "Your Nextcloud Server",
+                    logoUrl,
+                )
+            } else {
+                themeLogo = null
+            }
         }
 
         // ToDo: Logo, Background, Images,...
@@ -337,9 +361,9 @@ fun ConfigurationScreen(
 
         // UI / Theme
         calendarSettings.showAddEvent = showAddEvent;
-        calendarSettings.showLogo = showLogo
 
         appSettings.themeColor = selectedThemeColor
+        appSettings.logo = selectedThemeLogo
 
         // Admin
         if (adminPinActive) {
@@ -698,14 +722,6 @@ fun ConfigurationScreen(
                     }
 
                     SettingsSwitch(
-                        checked = showLogo,
-                        onCheckedChange = {
-                            showLogo = it
-                        },
-                        text = "Show Logo",
-                    )
-
-                    SettingsSwitch(
                         checked = showAddEvent,
                         onCheckedChange = {
                             showAddEvent = it
@@ -734,7 +750,6 @@ fun ConfigurationScreen(
                         Text(
                             text = "Primär Farbe",
                             color = AppTheme.textColor,
-                            modifier = Modifier.padding(start = 5.dp)
                         )
 
                         // Theme Color
@@ -789,6 +804,47 @@ fun ConfigurationScreen(
                                 }
                             )
                         }
+                    }
+
+                    // Logo
+                    Column {
+                        // Title
+                        Text(
+                            text = "Logo",
+                            color = AppTheme.textColor,
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .size(150.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
+                                .clickable {
+                                    logoSelectPopup.open()
+                                }
+                        ) {
+                            selectedThemeLogo?.let {
+                                AsyncImage(
+                                    model = it.path,
+                                    contentDescription = it.description,
+
+                                    modifier = Modifier
+                                        .background(AppTheme.background)
+                                        .padding(8.dp)
+                                        .fillMaxSize()
+                                )
+                            }
+                        }
+
+                        SettingsImageSelectPopup(
+                            state = logoSelectPopup,
+                            title = "Logo auswählen",
+                            images = themeLogo?.let { listOf(it) } ?: emptyList(),
+                            onSelect = { logo ->
+                                selectedThemeLogo = logo
+                                logoSelectPopup.close()
+                            }
+                        )
                     }
                 }
             }

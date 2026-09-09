@@ -214,11 +214,11 @@ fun RoomScreen(
                     //Logo
                     Box()
                     {
-                        if (calendarSettings.showLogo) {
 
+                        if (appSettings.logo != null) {
                             AsyncImage(
-                                model = roomService.getLogoUrl(), // works whether it resolves to .png or .svg
-                                contentDescription = "Logo",
+                                model = appSettings.logo?.path, // works whether it resolves to .png or .svg
+                                contentDescription = appSettings.logo?.description ?: "Logo",
                                 modifier = Modifier.fillMaxHeight()
                             )
                         }

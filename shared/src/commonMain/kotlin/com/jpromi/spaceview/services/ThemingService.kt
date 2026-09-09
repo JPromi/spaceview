@@ -13,4 +13,8 @@ interface ThemingService {
     var baseUrl: String
 
     suspend fun getThemeColor(): Color?
+
+    suspend fun getLogo(): String?
+
+    suspend fun getBackgroundImage(): String?
 }

@@ -22,12 +22,6 @@ class NextcloudThemingService(
         get() = resolvedBaseUrl
         set(value) {
             resolvedBaseUrl = value.toHttpBaseUrl()
-            coroutineScope.launch {
-                when (val result = nextcloudService.getNextcloudRootUrl(value)) {
-                    is ApiResult.Success -> result.data?.let { resolvedBaseUrl = it.toHttpBaseUrl() }
-                    is ApiResult.Error -> Unit
-                }
-            }
         }
 
     override suspend fun getThemeColor(): Color? {
@@ -49,6 +43,14 @@ class NextcloudThemingService(
         }
 
         return null
+    }
+
+    override suspend fun getLogo(): String? {
+        return "${resolvedBaseUrl.toHttpBaseUrl()}/apps/theming/image/logo"
+    }
+
+    override suspend fun getBackgroundImage(): String? {
+        return "${resolvedBaseUrl.toHttpBaseUrl()}/apps/theming/image/background"
     }
 
     private suspend fun resolveNextcloudBaseUrl(): String {
