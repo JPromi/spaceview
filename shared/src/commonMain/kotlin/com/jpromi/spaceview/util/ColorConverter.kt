@@ -19,9 +19,12 @@ fun Color.toHexCode(): String {
 fun String.toColor(): Color {
     val hex = removePrefix("#")
 
-    return when (hex.length) {
-        6 -> Color(("FF$hex").toULong(16))
-        8 -> Color(hex.toULong(16))
+    val argb = when (hex.length) {
+        3 -> "FF${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}"
+        6 -> "FF$hex"
+        8 -> hex
         else -> throw IllegalArgumentException("Invalid color: $this")
     }
+
+    return Color(argb.toLong(16).toInt())
 }
