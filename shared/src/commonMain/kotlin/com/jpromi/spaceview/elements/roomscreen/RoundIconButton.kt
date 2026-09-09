@@ -21,16 +21,16 @@ fun RoundIconButton(onClick: () -> Unit, icon : ImageVector)
         onClick = onClick,
         modifier = Modifier
             .size(48.dp)
-            .border(
-                width = 1.dp,
-                color = AppTheme.textColor,
-                shape = CircleShape
-            ),
+//            .border(
+//                width = 1.dp,
+//                color = AppTheme.primary.copy(alpha = 0.5f),
+//                shape = CircleShape
+//            ),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color.White,
+            tint = AppTheme.primary.copy(alpha = 0.5f),
             modifier = Modifier.size(20.dp),
         )
     }

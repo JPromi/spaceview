@@ -55,6 +55,7 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.elements.AppInfoPopup
+import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.rememberAppInfoPopupState
 import com.jpromi.spaceview.elements.rememberPopupState
 import com.jpromi.spaceview.elements.roomscreen.DateTimeView
@@ -271,21 +272,13 @@ fun RoomScreen(
                 }
 
                 if (calendarSettings.showAddEvent) {
-                    Button(
+                    SettingsButton(
+                        text = "Neuer Termin",
+                        onClick = onOpenConfiguration,
+                        isPrimary = true,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.LightGray,
-                            contentColor = Color.Black,
-                            disabledContainerColor = Color.Gray,
-                            disabledContentColor = Color.DarkGray,
-                        ),
-                        onClick = onOpenConfiguration
-                    ) {
-                        Text("Neuer Termin")
-                    }
+                            .height(48.dp)
+                    )
                 }
 
             }
