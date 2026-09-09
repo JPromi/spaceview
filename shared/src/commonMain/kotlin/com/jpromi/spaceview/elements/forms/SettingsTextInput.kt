@@ -70,11 +70,13 @@ fun SettingsTextInput(
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            color = AppTheme.textColor,
-            modifier = Modifier.padding(start = 5.dp)
-        )
+        if (label.isNotEmpty()) {
+            Text(
+                text = label,
+                color = AppTheme.textColor,
+                modifier = Modifier.padding(start = 5.dp)
+            )
+        }
 
         OutlinedTextField(
             value = sanitizedValue,
@@ -148,6 +150,8 @@ fun SettingsTextInput(
                         text = rules.errorMessage,
                         color = AppTheme.busyTagBackground,
                     )
+                } else {
+                    Text("")
                 }
             },
         )
