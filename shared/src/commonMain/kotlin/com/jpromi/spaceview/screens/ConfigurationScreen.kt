@@ -231,12 +231,10 @@ fun ConfigurationScreen(
                 val serverUrl = when (provider) {
                     CalendarProviderENUM.ICS -> selectedIcsUrl
                     CalendarProviderENUM.ROOMVOX -> {
-                        // ToDo: Needs to be fixxed, it also goes to IDP redirects
-                        // when (val result = nextcloudService.getNextcloudRootUrl(selectedRoomVoxServerUrl)) {
-                        //     is ApiResult.Success -> result.data ?: selectedRoomVoxServerUrl
-                        //     is ApiResult.Error -> selectedRoomVoxServerUrl
-                        // }.also { selectedRoomVoxServerUrl = it }
-                        selectedRoomVoxServerUrl
+                        when (val result = nextcloudService.getNextcloudRootUrl(selectedRoomVoxServerUrl)) {
+                            is ApiResult.Success -> result.data ?: selectedRoomVoxServerUrl
+                            is ApiResult.Error -> selectedRoomVoxServerUrl
+                        }.also { selectedRoomVoxServerUrl = it }
                     }
                     else -> selectedRoomVoxServerUrl
                 }

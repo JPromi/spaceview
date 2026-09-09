@@ -9,6 +9,7 @@ suspend fun <T> executeRequest(
     invalidRequestMessage: String? = null,
     isRequestValid: () -> Boolean = { true },
     expectSuccess: Boolean = true,
+    followRedirects: Boolean = true,
     request: suspend (HttpClient) -> T,
 ): ApiResult<T> {
     if (!isRequestValid()) {
@@ -17,6 +18,7 @@ suspend fun <T> executeRequest(
 
     val client = HttpClientFactory.create(
         expectSuccess = expectSuccess,
+        followRedirects = followRedirects,
     )
     return try {
         ApiResult.Success(request(client))

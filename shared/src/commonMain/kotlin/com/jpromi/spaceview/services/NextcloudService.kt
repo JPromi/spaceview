@@ -4,48 +4,68 @@ import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.executeRequest
 import com.jpromi.spaceview.network.toHttpBaseUrl
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
-import io.ktor.client.statement.request
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 
 class NextcloudService {
 
+    private companion object {
+        const val MAX_REDIRECTS = 5
+    }
+
     suspend fun getNextcloudRootUrl(url: String): ApiResult<String?> =
         executeNextcloudRequest(
-            expectSuccess = false
+            expectSuccess = false,
+            followRedirects = false,
         ) { client ->
-            val normalizedUrl = url.toHttpBaseUrl()
+            val normalizedUrl = url.toHttpBaseUrl().toRedirectCheckUrl()
+            if (normalizedUrl.isLoginUrl()) {
+                return@executeNextcloudRequest normalizedUrl.removeLoginPath()
+            }
+
             if (normalizedUrl.hasPathAfterHost()) {
                 return@executeNextcloudRequest normalizedUrl
             }
 
-            val response = client.get(normalizedUrl) {
-                accept(ContentType.Text.Html)
-            }
-            val loginUrl = response.request.url.toString()
+            var currentUrl = normalizedUrl
 
-            normalizedUrl
-                .resolveRedirectLocation(loginUrl)
-                .toNextcloudRootUrl()
+            repeat(MAX_REDIRECTS) {
+                val response = client.get(currentUrl) {
+                    accept(ContentType.Text.Html)
+                }
+
+                val location = response.headers[HttpHeaders.Location]
+                    ?: return@executeNextcloudRequest currentUrl.toRedirectCheckUrl().removeLoginPath()
+
+                currentUrl = currentUrl.resolveRedirectLocation(location).toRedirectCheckUrl()
+                if (currentUrl.isLoginUrl()) {
+                    return@executeNextcloudRequest currentUrl.removeLoginPath()
+                }
+            }
+
+            currentUrl.toRedirectCheckUrl().removeLoginPath()
         }
 
     suspend fun getNextcloudPage(url: String): ApiResult<String> =
         executeNextcloudRequest(expectSuccess = false) { client ->
             client.get(url.toHttpBaseUrl()) {
                 accept(ContentType.Text.Html)
-            }.body<String>()
+            }.bodyAsText()
         }
 
     private suspend fun <T> executeNextcloudRequest(
         expectSuccess: Boolean = true,
+        followRedirects: Boolean = true,
         request: suspend (HttpClient) -> T
     ): ApiResult<T> =
         executeRequest(
             invalidRequestMessage = "",
             isRequestValid = { true },
             expectSuccess = expectSuccess,
+            followRedirects = followRedirects,
             request = request,
         )
 
@@ -60,21 +80,20 @@ class NextcloudService {
         return pathStartIndex != -1
     }
 
-    private fun String.toNextcloudRootUrl(): String {
-        val normalizedUrl = trim()
+    private fun String.toRedirectCheckUrl(): String =
+        trim()
             .substringBefore('?')
             .substringBefore('#')
             .trimEnd('/')
 
-        return when {
-            normalizedUrl.endsWith("/login") ->
-                normalizedUrl.removeSuffix("/login")
-            else -> normalizedUrl
-        }
-    }
+    private fun String.isLoginUrl(): Boolean =
+        toRedirectCheckUrl().endsWith("/login")
+
+    private fun String.removeLoginPath(): String =
+        toRedirectCheckUrl().removeSuffix("/login")
 
     private fun String.resolveRedirectLocation(location: String): String {
-        val trimmedLocation = location.trim()
+        val trimmedLocation = location.trim().toRedirectCheckUrl()
 
         if (trimmedLocation.startsWith("http://") || trimmedLocation.startsWith("https://")) {
             return trimmedLocation

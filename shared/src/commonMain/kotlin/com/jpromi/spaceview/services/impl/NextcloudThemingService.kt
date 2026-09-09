@@ -31,7 +31,8 @@ class NextcloudThemingService(
         }
 
     override suspend fun getThemeColor(): Color? {
-        val htmlBody = nextcloudService.getNextcloudPage("${resolvedBaseUrl}/SPACEVIEW_FORCE_ERROR")
+        val nextcloudBaseUrl = resolveNextcloudBaseUrl()
+        val htmlBody = nextcloudService.getNextcloudPage("$nextcloudBaseUrl/SPACEVIEW_FORCE_ERROR")
 
         if (htmlBody is ApiResult.Success) {
             val regex = Regex("""<meta\s+name=["']theme-color["']\s+content=["'](#[0-9a-fA-F]{6})["']""")
@@ -48,6 +49,13 @@ class NextcloudThemingService(
         }
 
         return null
+    }
+
+    private suspend fun resolveNextcloudBaseUrl(): String {
+        return when (val result = nextcloudService.getNextcloudRootUrl(resolvedBaseUrl)) {
+            is ApiResult.Success -> result.data?.toHttpBaseUrl()?.also { resolvedBaseUrl = it } ?: resolvedBaseUrl
+            is ApiResult.Error -> resolvedBaseUrl
+        }
     }
 
 }
