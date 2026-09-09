@@ -49,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -142,6 +143,10 @@ fun ConfigurationScreen(
     val logoSelectPopup = rememberPopupState()
     var themeLogo: Image? by remember { mutableStateOf(null) }
     var selectedThemeLogo: Image? by remember { mutableStateOf(appSettings.logo) }
+
+    val backgroundImageSelectPopup = rememberPopupState()
+    var themeBackgroundImage: Image? by remember { mutableStateOf(null) }
+    var selectedThemeBackgroundImage: Image? by remember { mutableStateOf(appSettings.backgroundImage) }
 
     // Theme Color
     var selectedThemeColor: Color? by remember { mutableStateOf(appSettings.themeColor) }
@@ -243,10 +248,9 @@ fun ConfigurationScreen(
             null
         }
 
-        // Logo
+        // Logo / Background Image
         if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
             val logoUrl = themingService?.getLogo()
-
             if (logoUrl != null) {
                 themeLogo = Image(
                     AssetSourceType.REMOTE,
@@ -256,6 +260,18 @@ fun ConfigurationScreen(
                 )
             } else {
                 themeLogo = null
+            }
+
+            val backgroundUrl = themingService?.getBackgroundImage()
+            if (backgroundUrl != null) {
+                themeBackgroundImage = Image(
+                    AssetSourceType.REMOTE,
+                    "Nextcloud Background",
+                    "Your Nextcloud Server",
+                    backgroundUrl,
+                )
+            } else {
+                themeBackgroundImage = null
             }
         }
 
@@ -364,6 +380,7 @@ fun ConfigurationScreen(
 
         appSettings.themeColor = selectedThemeColor
         appSettings.logo = selectedThemeLogo
+        appSettings.backgroundImage = selectedThemeBackgroundImage
 
         // Admin
         if (adminPinActive) {
@@ -819,6 +836,7 @@ fun ConfigurationScreen(
                                 .size(150.dp)
                                 .clip(RoundedCornerShape(4.dp))
                                 .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
+                                .background(AppTheme.background)
                                 .clickable {
                                     logoSelectPopup.open()
                                 }
@@ -829,7 +847,6 @@ fun ConfigurationScreen(
                                     contentDescription = it.description,
 
                                     modifier = Modifier
-                                        .background(AppTheme.background)
                                         .padding(8.dp)
                                         .fillMaxSize()
                                 )
@@ -843,6 +860,48 @@ fun ConfigurationScreen(
                             onSelect = { logo ->
                                 selectedThemeLogo = logo
                                 logoSelectPopup.close()
+                            }
+                        )
+                    }
+
+                    // Background Image
+                    Column {
+                        // Title
+                        Text(
+                            text = "Hintergrundbild",
+                            color = AppTheme.textColor,
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .height(150.dp)
+                                .width(250.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
+                                .background(AppTheme.background)
+                                .clickable {
+                                    backgroundImageSelectPopup.open()
+                                }
+                        ) {
+                            selectedThemeBackgroundImage?.let {
+                                AsyncImage(
+                                    model = it.path,
+                                    contentDescription = it.description,
+
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    contentScale = ContentScale.FillBounds,
+                                )
+                            }
+                        }
+
+                        SettingsImageSelectPopup(
+                            state = backgroundImageSelectPopup,
+                            title = "Hintergrundbild auswählen",
+                            images = themeBackgroundImage?.let { listOf(it) } ?: emptyList(),
+                            onSelect = { backgroundImage ->
+                                selectedThemeBackgroundImage = backgroundImage
+                                backgroundImageSelectPopup.close()
                             }
                         )
                     }

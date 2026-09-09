@@ -58,11 +58,29 @@ class AppSettings(
             }
         }
 
+    var backgroundImage: Image?
+        get() = settings.getStringOrNull(KEY_THEME_BACKGROUND_IMAGE)?.let {
+            runCatching {
+                json.decodeFromString<Image>(it)
+            }.getOrNull()
+        }
+        set(value) {
+            if (value != null) {
+                settings.putString(
+                    KEY_THEME_BACKGROUND_IMAGE,
+                    json.encodeToString(value)
+                )
+            } else {
+                settings.remove(KEY_THEME_BACKGROUND_IMAGE)
+            }
+        }
+
 
     private companion object {
         const val KEY_ADMIN_PIN = "admin_pin"
         const val KEY_FULLSCREEN = "selected_fullscreen"
         const val KEY_THEME_COLOR = "theme_color"
         const val KEY_THEME_LOGO = "theme_logo"
+        const val KEY_THEME_BACKGROUND_IMAGE = "theme_background_image"
     }
 }
