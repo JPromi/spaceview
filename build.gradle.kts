@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.kotlinSerialization) apply false
-    id("com.mikepenz.aboutlibraries.plugin") version "15.1.1" apply false
+    alias(libs.plugins.aboutLibraries) apply false
 }
 
 tasks.register("syncIosVersion") {
