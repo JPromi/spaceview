@@ -75,8 +75,6 @@ fun SettingsImageSelectPopup(
 ) {
     if (!state.isVisible) return
 
-    if (!state.isVisible) return
-
     var libs by remember { mutableStateOf<Libs?>(null) }
 
     LaunchedEffect(true) {
