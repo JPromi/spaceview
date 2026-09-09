@@ -21,13 +21,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFromBaseline
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +47,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -68,6 +73,7 @@ import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
 import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.jpromi.spaceview.elements.forms.SettingsButton
+import com.jpromi.spaceview.elements.forms.SettingsColorButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
 import com.jpromi.spaceview.elements.forms.SettingsNavigationButton
 import com.jpromi.spaceview.elements.forms.SettingsSection
@@ -86,6 +92,8 @@ import com.jpromi.spaceview.services.impl.DemoRoomService
 import com.jpromi.spaceview.services.impl.IcsRoomService
 import com.jpromi.spaceview.services.impl.NextcloudThemingService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
+import com.jpromi.spaceview.util.toColor
+import com.jpromi.spaceview.util.toHexCode
 import kotlinx.coroutines.launch
 import com.mikepenz.aboutlibraries.Libs
 import spaceview.shared.generated.resources.Res
@@ -126,6 +134,21 @@ fun ConfigurationScreen(
     // UI
     var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
     var showLogo by remember { mutableStateOf(calendarSettings.showLogo) }
+
+    // Theme Color
+    var selectedThemeColor: Color? by remember { mutableStateOf(appSettings.themeColor) }
+    var inputThemeColor: String by remember { mutableStateOf(appSettings.themeColor?.toHexCode() ?: "") }
+    val ruleHexColor = TextInputRules(
+        regex = Regex("""^#[0-9A-Fa-f]{6}?$"""),
+        maxLength = 7,
+        allowEmpty = false,
+        errorMessage = "Ungültige HEX-Farbe"
+    )
+    val defaultThemeColor: List<Color> = listOf(
+        Color(0xFF11BD65),
+        Color(0xFFFF5700),
+        Color(0xFF971956),
+    )
 
     var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
 
@@ -211,6 +234,15 @@ fun ConfigurationScreen(
         }
 
         // ToDo: Logo, Background, Images,...
+    }
+
+    fun selectThemeColor(color: Color?) {
+        selectedThemeColor = color
+        if (color != null) {
+            inputThemeColor = color.toHexCode()
+        } else {
+            inputThemeColor = ""
+        }
     }
 
     fun checkConnection() {
@@ -301,8 +333,11 @@ fun ConfigurationScreen(
             calendarSettings.selectedRoomId = ""
         }
 
+        // UI / Theme
         calendarSettings.showAddEvent = showAddEvent;
         calendarSettings.showLogo = showLogo
+
+        appSettings.themeColor = selectedThemeColor
 
         // Admin
         if (adminPinActive) {
@@ -691,13 +726,59 @@ fun ConfigurationScreen(
                         text = "Fullscreen",
                     )
 
-                    // only Nextcloud
-                    if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
-                        Box(
+                    // Theme Color
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+
+                        // Color pallet
+                        Row(
                             modifier = Modifier
-                                .width(60.dp)
-                                .height(60.dp)
-                                .background(themeColor ?: Color(0, 0, 0))
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            // default colors
+                            for (color in defaultThemeColor) {
+                                SettingsColorButton(
+                                    color = color,
+                                    selected = selectedThemeColor == color,
+                                    onClick = {
+                                        selectThemeColor(color)
+                                    },
+                                )
+                            }
+
+                            // Nextcloud Theme
+                            themeColor?.let {
+                                SettingsColorButton(
+                                    color = it,
+                                    selected = selectedThemeColor == it,
+                                    onClick = {
+                                        selectThemeColor(it)
+                                    },
+                                )
+                            }
+                        }
+
+
+//                        Spacer(modifier = Modifier.fillMaxWidth())
+
+                        // custom
+                        SettingsTextInput(
+                            label = "",
+                            placeholder = "#FFFFFF",
+                            modifier = Modifier.width(200.dp),
+                            value = inputThemeColor,
+                            rules = ruleHexColor,
+                            onValueChange = { value ->
+                                inputThemeColor = value
+
+                                if (ruleHexColor.isValid(value)) {
+                                    selectedThemeColor = value.toColor()
+                                }
+                            }
                         )
                     }
                 }
