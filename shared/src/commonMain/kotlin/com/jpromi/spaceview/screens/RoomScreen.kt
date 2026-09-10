@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -30,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.composables.icons.lucide.Info
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.RefreshCw
 import com.composables.icons.lucide.Settings
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
@@ -50,6 +55,14 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.elements.AppInfoPopup
+import com.jpromi.spaceview.elements.ImageView
+import com.jpromi.spaceview.elements.forms.SettingsButton
+import com.jpromi.spaceview.elements.rememberAppInfoPopupState
+import com.jpromi.spaceview.elements.rememberPopupState
+import com.jpromi.spaceview.elements.roomscreen.DateTimeView
+import com.jpromi.spaceview.elements.roomscreen.NameStatusView
+import com.jpromi.spaceview.elements.roomscreen.RoundIconButton
+import com.jpromi.spaceview.elements.roomscreen.SlotView
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.Room
@@ -59,12 +72,22 @@ import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toUserMessage
 import com.jpromi.spaceview.services.RoomService
 import com.jpromi.spaceview.services.impl.DemoRoomService
+import com.jpromi.spaceview.services.impl.IcsRoomService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
+import com.jpromi.spaceview.util.toMinuteOfDay
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
+import com.jpromi.spaceview.util.toTimeText
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 @Composable
 fun RoomScreen(
@@ -80,17 +103,25 @@ fun RoomScreen(
     var isLoadingRoom by remember { mutableStateOf(true) }
     var isLoadingAvailability by remember { mutableStateOf(true) }
     var currentMinuteOfDay by remember { mutableStateOf(0) }
-    var currentTimeText by remember { mutableStateOf("--:--") }
-    var currentDateText by remember { mutableStateOf("--.--.----") }
+    var currentTime by remember {
+        mutableStateOf<LocalDateTime>(
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        )
+    }
+    val coroutineScope = rememberCoroutineScope()
 
-    var isAdminPinPopupVisible by remember { mutableStateOf(false) }
-    var isAppInfoPopupVisible by remember { mutableStateOf(false) }
+    val adminPinPopup = rememberPopupState()
+    val appInfoPopup = rememberAppInfoPopupState()
 
 
     fun initRoomService() {
         when (calendarSettings.calendarProvider) {
             CalendarProviderENUM.ROOMVOX -> {
                 roomService = RoomVoxRoomService()
+            }
+
+            CalendarProviderENUM.ICS -> {
+                roomService = IcsRoomService()
             }
 
             else -> {
@@ -101,13 +132,32 @@ fun RoomScreen(
 
     LaunchedEffect(Unit) {
         while (true) {
-            val now = Clock.System.now()
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-            currentMinuteOfDay = now.hour * 60 + now.minute
-            currentTimeText = "${now.hour.twoDigits()}:${now.minute.twoDigits()}"
-            currentDateText = "${now.day.twoDigits()}.${(now.month.ordinal + 1).twoDigits()}.${now.year}"
-            delay(30_000)
+            val currentTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            currentMinuteOfDay = currentTime.toMinuteOfDay()
+            delay(30.seconds)
         }
+    }
+
+    suspend fun loadRoom() {
+        when (val result = roomService.getRoomById(calendarSettings.selectedRoomId)) {
+            is ApiResult.Success -> room = result.data
+            is ApiResult.Error -> {
+                room = null
+                errorMessage = result.toUserMessage()
+            }
+        }
+        isLoadingRoom = false
+    }
+
+    suspend fun loadRoomUse() {
+        when (val result = roomService.getRoomUse(calendarSettings.selectedRoomId)) {
+            is ApiResult.Success -> roomUse = result.data
+            is ApiResult.Error -> {
+                roomUse = null
+                errorMessage = result.toUserMessage()
+            }
+        }
+        isLoadingAvailability = false
     }
 
     LaunchedEffect(calendarSettings.selectedRoomId, calendarSettings.calendarProvider) {
@@ -116,24 +166,10 @@ fun RoomScreen(
         isLoadingAvailability = true
 
         while (true) {
-            when (val result = roomService.getRoomById(calendarSettings.selectedRoomId)) {
-                is ApiResult.Success -> room = result.data
-                is ApiResult.Error -> {
-                    room = null
-                    errorMessage = result.toUserMessage()
-                }
-            }
-            isLoadingRoom = false
+            loadRoom()
+            loadRoomUse()
 
-            when (val result = roomService.getRoomUse(calendarSettings.selectedRoomId)) {
-                is ApiResult.Success -> roomUse = result.data
-                is ApiResult.Error -> {
-                    roomUse = null
-                    errorMessage = result.toUserMessage()
-                }
-            }
-            isLoadingAvailability = false
-            delay(30_000) // 30 seconds
+            delay(30.seconds) // 30 seconds
         }
     }
 
@@ -141,8 +177,8 @@ fun RoomScreen(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = AppTheme.background)
             .padding(32.dp)
+            .windowInsetsPadding(WindowInsets.displayCutout)
     ) {
         if (isLoadingRoom || isLoadingAvailability) {
             // loading
@@ -159,19 +195,7 @@ fun RoomScreen(
             ) {
                 // Datetime
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = currentTimeText,
-                        modifier = Modifier.padding(bottom = 4.dp),
-                        fontWeight = FontWeight.W500,
-                        fontSize = 50.sp,
-                        color = AppTheme.textColor,
-                    )
-                    Text(
-                        text = currentDateText,
-                        fontWeight = FontWeight.W400,
-                        fontSize = 20.sp,
-                        color = AppTheme.textColor,
-                    )
+                    DateTimeView(currentTime)
                 }
 
                 // Name & Status
@@ -179,89 +203,7 @@ fun RoomScreen(
                     modifier = Modifier.weight(2f),
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text(
-                        text = room?.name ?: "",
-                        modifier = Modifier.padding(bottom = 4.dp),
-                        fontWeight = FontWeight.W500,
-                        fontSize = 30.sp,
-                        color = AppTheme.textColor,
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-
-                    // status
-                    Box(
-                        modifier = Modifier
-                            .border(
-                                width = 1.dp,
-                                color = if (roomUse?.currentEvent != null) {
-                                    AppTheme.busyTagBackground
-                                } else {
-                                    AppTheme.freeTagBackground
-                                },
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        if (roomUse?.currentEvent != null) {
-                                            AppTheme.busyTagBackground
-                                        } else {
-                                            AppTheme.freeTagBackground
-                                        }.copy(alpha = 0.25f),
-                                        Color.Transparent
-                                    ),
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                            )
-                            .padding(12.dp)
-                            .height(90.dp)
-                            .fillMaxWidth()
-                    ) {
-                        if (roomUse?.currentEvent != null) {
-                            // busy
-                            Column(
-                                modifier = Modifier
-                                    .padding(start = 6.dp)
-                                    .fillMaxHeight(),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Belegt",
-                                    color = AppTheme.textColor,
-                                    fontWeight = FontWeight.W700,
-                                    fontSize = 32.sp,
-                                    lineHeight = 10.sp,
-                                )
-                                // ToDo: Show current termin, remaining minutes,...
-                            }
-
-                        } else {
-                            // free
-                            Column(
-                                modifier = Modifier
-                                    .padding(start = 6.dp)
-                                    .fillMaxHeight(),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Frei",
-                                    color = AppTheme.textColor,
-                                    fontWeight = FontWeight.W700,
-                                    fontSize = 32.sp,
-                                    lineHeight = 10.sp,
-                                )
-                                Text(
-                                    text = "bis xx:xx", // ToDo: Implement time until free
-                                    color = AppTheme.textColor,
-                                    fontSize = 18.sp,
-                                    lineHeight = 18.sp,
-                                )
-                            }
-                        }
-
-                    }
+                    NameStatusView(room, roomUse, currentMinuteOfDay)
                 }
 
                 Row(
@@ -272,14 +214,11 @@ fun RoomScreen(
                     //Logo
                     Box()
                     {
-                        if (calendarSettings.showLogo) {
-
-                            AsyncImage(
-                                model = roomService.getLogoUrl(), // works whether it resolves to .png or .svg
-                                contentDescription = "Logo",
-                                modifier = Modifier.fillMaxHeight()
-                            )
-                        }
+                        ImageView(
+                            image = appSettings.logo,
+                            modifier = Modifier
+                                .fillMaxHeight(),
+                        )
                     }
 
                     // Settings
@@ -287,238 +226,68 @@ fun RoomScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     )
                     {
-                        IconButton(
-                            onClick = { isAppInfoPopupVisible = true },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = AppTheme.textColor,
-                                    shape = CircleShape
-                                ),
-                        ) {
-                            Icon(
-                                imageVector = Lucide.Info,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-
-                        IconButton(
+                        RoundIconButton(
+                            onClick = appInfoPopup::open,
+                            icon = Lucide.Info
+                        )
+                        
+                        RoundIconButton(
                             onClick = if (appSettings.adminPin.isNotEmpty()) {
-                                { isAdminPinPopupVisible = true }
+                                adminPinPopup::open
                             } else {
                                 onOpenConfiguration
-                            },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = AppTheme.textColor,
-                                    shape = CircleShape
-                                ),
-                        ) {
-                            Icon(
-                                imageVector = Lucide.Settings,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
+                            }, icon = Lucide.Settings)
+
+                        RoundIconButton(
+                            onClick =
+                                {
+                                    isLoadingRoom = true
+                                    isLoadingAvailability = true
+                                    coroutineScope.launch {
+                                        loadRoom()
+                                        loadRoomUse()
+                                        isLoadingRoom = false
+                                        isLoadingAvailability = false
+                                    }
+                                },
+                            icon =Lucide.RefreshCw
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column(modifier = Modifier.weight(3f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(
+                modifier = Modifier.weight(3f).fillMaxHeight(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
 
                 // Slots
-                Column(
-                    modifier = Modifier.fillMaxHeight().weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    if (isLoadingAvailability) {
-                        CircularProgressIndicator()
-                    } else {
-                        val slots = roomUse?.slots.orEmpty().filter { slot ->
-                            slot.end.toMinuteOfDay() > currentMinuteOfDay
-                        }
-
-                        BoxWithConstraints(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                        ) {
-                            val spacing = 6.dp
-                            val totalSpacing = spacing * (slots.size - 1).coerceAtLeast(0)
-                            val availableSlotHeight = maxOf(0.dp, maxHeight - totalSpacing)
-                            val durations = slots.map {
-                                (it.end.toMinuteOfDay() - it.start.toMinuteOfDay())
-                                    .coerceAtLeast(1)
-                                    .toLong()
-                            }
-                            val slotHeights = calculateSlotHeights(
-                                availableHeight = availableSlotHeight,
-                                durations = durations,
-                                minHeight = 70.dp,
-                            )
-
-                            Column(
-                                modifier = Modifier.verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(spacing),
-                            ) {
-                                slots.forEachIndexed { index, slot ->
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(slotHeights[index])
-                                            .background(
-                                                color = AppTheme.slotBackground,
-                                                shape = RoundedCornerShape(12.dp),
-                                            )
-                                            .padding(8.dp),
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            // Status
-                                            Box(
-                                                modifier = Modifier
-                                                    .background(
-                                                        color = if (slot.status == SlotStatus.BOOKED) {
-                                                            AppTheme.busyTagBackground
-                                                        } else {
-                                                            AppTheme.freeTagBackground
-                                                        },
-                                                        shape = RoundedCornerShape(6.dp)
-                                                    )
-                                                    .padding(vertical = 2.dp, horizontal = 6.dp)
-                                            ) {
-                                                Text(
-                                                    text = slot.status.toString(),
-                                                    color = if (slot.status == SlotStatus.BOOKED) {
-                                                        AppTheme.busyTabTextColor
-                                                    } else {
-                                                        AppTheme.freeTabTextColor
-                                                    },
-                                                )
-                                            }
-
-                                            // Time
-                                            Text(
-                                                text = "${slot.start.toTimeText()} - ${slot.end.toTimeText()}",
-                                                color = AppTheme.textColor,
-                                            )
-                                        }
-
-
-                                        // Title
-                                        Text(
-                                            text = if (slot.status == SlotStatus.BOOKED) {
-                                                slot.event?.title ?: "Belegt"
-                                            } else {
-                                                "Frei"
-                                            },
-                                            color = AppTheme.textColor,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+                Column(modifier = Modifier.fillMaxHeight().weight(1f)) {
+                    SlotView(roomUse, currentMinuteOfDay)
                 }
 
                 if (calendarSettings.showAddEvent) {
-                    Button(
+                    SettingsButton(
+                        text = "Neuer Termin",
+                        onClick = onOpenConfiguration,
+                        isPrimary = true,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.LightGray,
-                            contentColor = Color.Black,
-                            disabledContainerColor = Color.Gray,
-                            disabledContentColor = Color.DarkGray,
-                        ),
-                        onClick = onOpenConfiguration
-                    ) {
-                        Text("Neuer Termin")
-                    }
+                            .height(48.dp)
+                    )
                 }
 
             }
         }
     }
 
-    if (isAdminPinPopupVisible) {
-        AdminPinPopup(
-            onValidPinEnteredFunction = {
-                onOpenConfiguration()
-            },
-            onDismiss = { isAdminPinPopupVisible = false },
-            appSettings = appSettings
-        )
-    }
+    AdminPinPopup(
+        state = adminPinPopup,
+        onValidPinEnteredFunction = onOpenConfiguration,
+        appSettings = appSettings,
+    )
 
     // App Info Popup
-    if (isAppInfoPopupVisible) {
-        AppInfoPopup(
-            onDismiss = { isAppInfoPopupVisible = false }
-        )
-    }
+    AppInfoPopup(state = appInfoPopup)
 }
-
-private fun calculateSlotHeights(
-    availableHeight: Dp,
-    durations: List<Long>,
-    minHeight: Dp,
-): List<Dp> {
-    if (durations.isEmpty()) return emptyList()
-
-    val minimumTotalHeight = minHeight.value * durations.size
-    if (availableHeight.value < minimumTotalHeight) {
-        return List(durations.size) { minHeight }
-    }
-
-    val heights = MutableList(durations.size) { 0f }
-    val flexibleSlots = durations.indices.toMutableSet()
-    var remainingHeight = availableHeight.value
-
-    while (flexibleSlots.isNotEmpty()) {
-        val remainingDuration = flexibleSlots
-            .sumOf { durations[it].toDouble() }
-            .toFloat()
-
-        val slotsBelowMinimum = flexibleSlots.filter { index ->
-            val proportionalHeight = remainingHeight *
-                    (durations[index].toFloat() / remainingDuration)
-            proportionalHeight < minHeight.value
-        }
-
-        if (slotsBelowMinimum.isEmpty()) {
-            flexibleSlots.forEach { index ->
-                heights[index] = remainingHeight *
-                        (durations[index].toFloat() / remainingDuration)
-            }
-            break
-        }
-
-        slotsBelowMinimum.forEach { index ->
-            heights[index] = minHeight.value
-            remainingHeight -= minHeight.value
-            flexibleSlots.remove(index)
-        }
-    }
-
-    return heights.map { it.dp }
-}
-
-private fun LocalDateTime.toMinuteOfDay(): Int = hour * 60 + minute
-
-private fun LocalDateTime.toTimeText(): String = "${hour.twoDigits()}:${minute.twoDigits()}"
-
-private fun Int.twoDigits(): String = toString().padStart(2, '0')

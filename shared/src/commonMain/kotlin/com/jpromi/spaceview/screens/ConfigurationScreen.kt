@@ -14,19 +14,27 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFromBaseline
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -39,7 +47,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -62,21 +72,34 @@ import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
-import com.jpromi.spaceview.elements.LibrariesView
+import com.jpromi.spaceview.elements.ImageView
+import com.jpromi.spaceview.elements.SettingsImageSelectPopup
+import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.jpromi.spaceview.elements.forms.SettingsButton
+import com.jpromi.spaceview.elements.forms.SettingsColorButton
 import com.jpromi.spaceview.elements.forms.SettingsDropdown
 import com.jpromi.spaceview.elements.forms.SettingsNavigationButton
 import com.jpromi.spaceview.elements.forms.SettingsSection
 import com.jpromi.spaceview.elements.forms.SettingsSwitch
 import com.jpromi.spaceview.elements.forms.SettingsTextInput
 import com.jpromi.spaceview.elements.forms.TextInputRules
+import com.jpromi.spaceview.elements.rememberPopupState
+import com.jpromi.spaceview.enums.AssetSourceType
 import com.jpromi.spaceview.enums.CalendarProviderENUM
 import com.jpromi.spaceview.models.CalendarProvider
+import com.jpromi.spaceview.models.Image
 import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.network.ApiResult
+import com.jpromi.spaceview.network.toUserMessage
+import com.jpromi.spaceview.services.NextcloudService
 import com.jpromi.spaceview.services.RoomService
+import com.jpromi.spaceview.services.ThemingService
 import com.jpromi.spaceview.services.impl.DemoRoomService
+import com.jpromi.spaceview.services.impl.IcsRoomService
+import com.jpromi.spaceview.services.impl.NextcloudThemingService
 import com.jpromi.spaceview.services.impl.RoomVoxRoomService
+import com.jpromi.spaceview.util.toColor
+import com.jpromi.spaceview.util.toHexCode
 import kotlinx.coroutines.launch
 import com.mikepenz.aboutlibraries.Libs
 import spaceview.shared.generated.resources.Res
@@ -92,11 +115,14 @@ fun ConfigurationScreen(
     calendarSettings: CalendarSettings = remember { CalendarSettings() },
 ) {
     var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
+    var themingService by remember { mutableStateOf<ThemingService?>(null) }
+    var nextcloudService by remember { mutableStateOf(NextcloudService()) }
     val fullscreenController = LocalFullscreenController.current;
 
     var selectedProvider by remember {
         mutableStateOf(calendarSettings.calendarProvider ?: CalendarProviderENUM.DEMO)
     }
+    var isCheckingConnection by remember { mutableStateOf(false) }
 
     // RoomVox
     var selectedRoomVoxServerUrl by remember {
@@ -105,11 +131,41 @@ fun ConfigurationScreen(
     var selectedRoomVoxToken by remember {
         mutableStateOf(calendarSettings.roomVoxAccessToken)
     }
-    var isCheckingRoomVoxConnection by remember { mutableStateOf(false) }
+
+    // ICS
+    var selectedIcsUrl by remember {
+        mutableStateOf(calendarSettings.icsUrl)
+    }
 
     // UI
     var showAddEvent by remember { mutableStateOf(calendarSettings.showAddEvent) }
-    var showLogo by remember { mutableStateOf(calendarSettings.showLogo) }
+
+    val logoSelectPopup = rememberPopupState()
+    var themeLogo: Image? by remember { mutableStateOf(null) }
+    var selectedThemeLogo: Image? by remember { mutableStateOf(appSettings.logo) }
+
+    val backgroundImageSelectPopup = rememberPopupState()
+    var themeBackgroundImage: Image? by remember { mutableStateOf(null) }
+    var selectedThemeBackgroundImage: Image? by remember { mutableStateOf(appSettings.backgroundImage) }
+
+    var themeImages: List<Image> by remember { mutableStateOf(emptyList()) }
+
+    // Theme Color
+    var selectedThemeColor: Color? by remember { mutableStateOf(appSettings.themeColor) }
+    var inputThemeColor: String by remember { mutableStateOf(appSettings.themeColor?.toHexCode() ?: "") }
+    val ruleHexColor = TextInputRules(
+        regex = Regex("""^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"""),
+        maxLength = 7,
+        allowEmpty = false,
+        errorMessage = "Ungültige HEX-Farbe"
+    )
+    val defaultThemeColor: List<Color> = listOf(
+        Color(0xFF11BD65),
+        Color(0xFFFF5700),
+        Color(0xFF971956),
+        Color(0xFF8B5CF6),
+        Color(0xFF1687E8),
+    )
 
     var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
 
@@ -135,11 +191,20 @@ fun ConfigurationScreen(
 
     var isLoadingRooms by remember { mutableStateOf(false) }
     var loadRoomsMessage by remember { mutableStateOf<String?>(null) }
+    var themeColor by remember { mutableStateOf<Color?>(null) }
 
-    fun initRoomService() {
+    fun selectCalendarProvider(provider: CalendarProviderENUM) {
+        selectedProvider = provider
+        themingService = null
+
         when (selectedProvider) {
             CalendarProviderENUM.ROOMVOX -> {
                 roomService = RoomVoxRoomService()
+                themingService = NextcloudThemingService(selectedRoomVoxServerUrl)
+            }
+
+            CalendarProviderENUM.ICS -> {
+                roomService = IcsRoomService()
             }
 
             else -> {
@@ -177,42 +242,100 @@ fun ConfigurationScreen(
         }
     }
 
+    suspend fun loadTheme() {
+
+        // Color / Logo / Background Image
+        if (themingService != null) {
+            themeColor = themingService?.getThemeColor()
+
+            val logoUrl = themingService?.getLogo()
+            if (logoUrl != null) {
+                themeLogo = Image(
+                    AssetSourceType.REMOTE,
+                    "Nextcloud Logo",
+                    "Your Nextcloud Server",
+                    logoUrl,
+                )
+            } else {
+                themeLogo = null
+            }
+
+            val backgroundUrl = themingService?.getBackgroundImage()
+            if (backgroundUrl != null) {
+                themeBackgroundImage = Image(
+                    AssetSourceType.REMOTE,
+                    "Nextcloud Background",
+                    "Your Nextcloud Server",
+                    backgroundUrl,
+                )
+            } else {
+                themeBackgroundImage = null
+            }
+
+            themeImages = themingService?.getImageLibrary() ?: listOf();
+        }
+    }
+
+    fun selectThemeColor(color: Color?) {
+        selectedThemeColor = color
+        if (color != null) {
+            inputThemeColor = color.toHexCode()
+        } else {
+            inputThemeColor = ""
+        }
+    }
+
     fun checkConnection() {
-        roomService.configure(
-            serverUrl = selectedRoomVoxServerUrl,
-            accessToken = selectedRoomVoxToken,
-        )
+        val provider = selectedProvider
+        val service = roomService
 
         coroutineScope.launch {
-            roomService.configure(
-                serverUrl = selectedRoomVoxServerUrl,
-                accessToken = selectedRoomVoxToken,
-            )
-
-            isCheckingRoomVoxConnection = true
+            isCheckingConnection = true
             remoteServerConnectionMessage = null
             remoteServerConnection = false
 
             loadedRooms = emptyList()
             loadRoomsMessage = null
 
-            remoteServerConnectionMessage = when (
-                roomService.checkCredentials()
-            ) {
-                is ApiResult.Success -> {
-                    remoteServerConnection = true
-                    loadRooms()
-                    "Verbunden"
+            themeColor = null
+
+            try {
+                val serverUrl = when (provider) {
+                    CalendarProviderENUM.ICS -> selectedIcsUrl
+                    CalendarProviderENUM.ROOMVOX -> {
+                        when (val result = nextcloudService.getNextcloudRootUrl(selectedRoomVoxServerUrl)) {
+                            is ApiResult.Success -> result.data ?: selectedRoomVoxServerUrl
+                            is ApiResult.Error -> selectedRoomVoxServerUrl
+                        }.also { selectedRoomVoxServerUrl = it }
+                    }
+                    else -> selectedRoomVoxServerUrl
                 }
 
-                is ApiResult.Unauthorized -> "Token falsch"
-                is ApiResult.NetworkError -> "Network error"
-                is ApiResult.NotFound -> "Not found"
-                is ApiResult.Forbidden -> "Forbidden"
-                else -> "Unknown error"
-            }
+                service.configure(
+                    serverUrl = serverUrl,
+                    accessToken = if (provider == CalendarProviderENUM.ROOMVOX) selectedRoomVoxToken else "",
+                )
 
-            isCheckingRoomVoxConnection = false
+                remoteServerConnectionMessage = when (val result = service.checkCredentials()) {
+                    is ApiResult.Success -> {
+                        remoteServerConnection = true
+                        if (provider == CalendarProviderENUM.ROOMVOX) {
+                            loadRooms()
+                            themingService?.baseUrl = selectedRoomVoxServerUrl
+                        }
+
+                        coroutineScope.launch {
+                            loadTheme()
+                        }
+
+                        "Verbunden"
+                    }
+
+                    is ApiResult.Error -> result.toUserMessage()
+                }
+            } finally {
+                isCheckingConnection = false
+            }
         }
     }
 
@@ -234,11 +357,19 @@ fun ConfigurationScreen(
             calendarSettings.roomVoxAccessToken = ""
         }
 
+        // ICS
+        if (selectedProvider == CalendarProviderENUM.ICS) {
+            calendarSettings.icsUrl = selectedIcsUrl
+        } else {
+            calendarSettings.icsUrl = ""
+        }
+
         // set Room ID
         if (
             selectedProvider in listOf(
                 CalendarProviderENUM.ROOMVOX,
                 CalendarProviderENUM.DEMO,
+                CalendarProviderENUM.ICS
             )
         ) {
             calendarSettings.selectedRoomId = selectedRoomId
@@ -246,8 +377,12 @@ fun ConfigurationScreen(
             calendarSettings.selectedRoomId = ""
         }
 
+        // UI / Theme
         calendarSettings.showAddEvent = showAddEvent;
-        calendarSettings.showLogo = showLogo
+
+        appSettings.themeColor = selectedThemeColor
+        appSettings.logo = selectedThemeLogo
+        appSettings.backgroundImage = selectedThemeBackgroundImage
 
         // Admin
         if (adminPinActive) {
@@ -267,24 +402,23 @@ fun ConfigurationScreen(
 
     // on open
     LaunchedEffect(Unit) {
-        initRoomService()
+        selectCalendarProvider(selectedProvider)
         checkConnection()
     }
 
+    // Navigation Scrolling
     val scrollState = rememberLazyListState()
 
-    // Navigation Scrolling
     val providerSectionIndex = 0
     val calendarSectionIndex = 1
     val applicationSectionIndex = 2
     val adminSectionIndex = 3
-    val licenseSectionIndex = 4
     val sectionIndices = remember {
         listOf(
             providerSectionIndex,
             calendarSectionIndex,
             applicationSectionIndex,
-            adminSectionIndex,
+            adminSectionIndex
         )
     }
     val activeSectionIndex by remember {
@@ -311,7 +445,7 @@ fun ConfigurationScreen(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.background),
+            .windowInsetsPadding(WindowInsets.displayCutout),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // Sidebar
@@ -366,33 +500,19 @@ fun ConfigurationScreen(
                         onClick = { scrollToSection(adminSectionIndex) },
                     )
                 }
-                item {
-                    SettingsNavigationButton(
-                        text = "Licenses",
-                        icon = Lucide.Paperclip,
-                        isActive = activeSectionIndex == adminSectionIndex,
-                        onClick = { scrollToSection(licenseSectionIndex) },
-                    )
-                }
             }
         }
 
-        VerticalDivider()
+        VerticalDivider(
+            color = AppTheme.borderSettings,
+        )
 
         // Settings
-        LazyColumn(
+        ScrollColumn(
             state = scrollState,
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
-                .draggable(
-                    orientation = Orientation.Vertical,
-                    state = rememberDraggableState { delta ->
-                        coroutineScope.launch {
-                            scrollState.scrollBy(-delta)
-                        }
-                    },
-                ),
+                .fillMaxHeight(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -412,6 +532,10 @@ fun ConfigurationScreen(
                             id = CalendarProviderENUM.ROOMVOX,
                             name = "RoomVox"
                         ),
+                        CalendarProvider(
+                            id = CalendarProviderENUM.ICS,
+                            name = "iCal"
+                        )
                     )
 
                     SettingsDropdown(
@@ -423,8 +547,7 @@ fun ConfigurationScreen(
                             remoteServerConnectionMessage = null
                             remoteServerConnection = false
                             loadedRooms = emptyList()
-                            selectedProvider = provider.id
-                            initRoomService()
+                            selectCalendarProvider(provider.id)
 
                             if (selectedProvider == CalendarProviderENUM.DEMO) {
                                 checkConnection()
@@ -447,6 +570,8 @@ fun ConfigurationScreen(
                                         remoteServerConnectionMessage = null
                                         remoteServerConnection = false
                                         loadedRooms = emptyList()
+
+                                        themingService?.let { it.baseUrl = selectedRoomVoxServerUrl }
                                     },
                                     keyboardType = KeyboardType.Uri
                                 )
@@ -506,12 +631,84 @@ fun ConfigurationScreen(
                                     }
 
                                     SettingsButton(
-                                        text = if (isCheckingRoomVoxConnection) {
+                                        text = if (isCheckingConnection) {
                                             "Prüfe..."
                                         } else {
                                             "Prüfen"
                                         },
-                                        enabled = !isCheckingRoomVoxConnection,
+                                        enabled = !isCheckingConnection,
+                                        onClick = { checkConnection() },
+                                        modifier = Modifier.width(200.dp),
+                                    )
+                                }
+                            }
+                        }
+
+                        CalendarProviderENUM.ICS -> {
+                            SettingsSection(
+                                title = "iCal Provider",
+                                transparentBackground = true
+                            ) {
+                                SettingsTextInput(
+                                    label = "URL",
+                                    value = selectedIcsUrl,
+                                    onValueChange = {
+                                        selectedIcsUrl = it
+                                        remoteServerConnectionMessage = null
+                                        remoteServerConnection = false
+                                        loadedRooms = emptyList()
+                                    },
+                                    keyboardType = KeyboardType.Uri
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (remoteServerConnectionMessage != null) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
+                                            if (remoteServerConnection) {
+                                                Icon(
+                                                    imageVector = Lucide.CircleCheck,
+                                                    contentDescription = null,
+                                                    tint = AppTheme.textColorGreen,
+                                                )
+                                            } else {
+                                                Icon(
+                                                    imageVector = Lucide.CircleX,
+                                                    contentDescription = null,
+                                                    tint = AppTheme.textColorRed,
+                                                )
+                                            }
+
+
+                                            Text(
+                                                text = remoteServerConnectionMessage!!,
+                                                color =
+                                                    if (remoteServerConnection) {
+                                                        AppTheme.textColorGreen
+                                                    } else {
+                                                        AppTheme.textColorRed
+                                                    },
+                                            )
+                                        }
+                                    } else {
+                                        Spacer(
+                                            modifier = Modifier
+                                        )
+                                    }
+
+                                    SettingsButton(
+                                        text = if (isCheckingConnection) {
+                                            "Prüfe..."
+                                        } else {
+                                            "Prüfen"
+                                        },
+                                        enabled = !isCheckingConnection,
                                         onClick = { checkConnection() },
                                         modifier = Modifier.width(200.dp),
                                     )
@@ -529,16 +726,25 @@ fun ConfigurationScreen(
                 SettingsSection(
                     title = "Kalender"
                 ) {
+                    if (selectedProvider == CalendarProviderENUM.ROOMVOX || selectedProvider == CalendarProviderENUM.DEMO) {
+                        SettingsDropdown(
+                            label = "Raum auswählen",
+                            options = loadedRooms,
+                            selectedOption = loadedRooms.find { it.id == selectedRoomId }
+                                ?: loadedRooms.firstOrNull(),
+                            optionText = { room -> room.name },
+                            onOptionSelected = { room ->
+                                selectedRoomId = room.id
+                            }
+                        )
+                    }
 
-                    SettingsDropdown(
-                        label = "Raum auswählen",
-                        options = loadedRooms,
-                        selectedOption = loadedRooms.find { it.id == selectedRoomId }
-                            ?: loadedRooms.firstOrNull(),
-                        optionText = { room -> room.name },
-                        onOptionSelected = { room ->
-                            selectedRoomId = room.id
-                        }
+                    SettingsSwitch(
+                        checked = showAddEvent,
+                        onCheckedChange = {
+                            showAddEvent = it
+                        },
+                        text = "Show Add Button",
                     )
 
                     // allow edit
@@ -555,6 +761,147 @@ fun ConfigurationScreen(
                         },
                         text = "Fullscreen",
                     )
+
+                    // Theme color selector
+                    Column {
+                        // Title
+                        Text(
+                            text = "Primär Farbe",
+                            color = AppTheme.textColor,
+                        )
+
+                        // Theme Color
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+
+                            // Color pallet
+                            Row(
+                                modifier = Modifier
+                                    .padding(bottom = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                // default colors
+                                for (color in defaultThemeColor) {
+                                    SettingsColorButton(
+                                        color = color,
+                                        selected = selectedThemeColor == color,
+                                        onClick = {
+                                            selectThemeColor(color)
+                                        },
+                                    )
+                                }
+
+                                // Nextcloud Theme
+                                themeColor?.let {
+                                    SettingsColorButton(
+                                        color = it,
+                                        selected = selectedThemeColor == it,
+                                        onClick = {
+                                            selectThemeColor(it)
+                                        },
+                                    )
+                                }
+                            }
+
+                            // custom
+                            SettingsTextInput(
+                                label = "",
+                                placeholder = "#FFFFFF",
+                                modifier = Modifier.width(200.dp),
+                                value = inputThemeColor,
+                                rules = ruleHexColor,
+                                onValueChange = { value ->
+                                    inputThemeColor = value
+
+                                    if (ruleHexColor.isValid(value)) {
+                                        selectedThemeColor = value.toColor()
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    // Logo
+                    Column {
+                        // Title
+                        Text(
+                            text = "Logo",
+                            color = AppTheme.textColor,
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .size(150.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
+                                .background(AppTheme.background)
+                                .clickable {
+                                    logoSelectPopup.open()
+                                }
+                        ) {
+                            selectedThemeLogo?.let {
+                                ImageView(
+                                    image = it,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .fillMaxSize(),
+                                )
+                            }
+                        }
+
+                        SettingsImageSelectPopup(
+                            state = logoSelectPopup,
+                            title = "Logo auswählen",
+                            images = (listOfNotNull(themeLogo) + themeImages).distinctBy { it.path },
+                            onSelect = { logo ->
+                                selectedThemeLogo = logo
+                                logoSelectPopup.close()
+                            }
+                        )
+                    }
+
+                    // Background Image
+                    Column {
+                        // Title
+                        Text(
+                            text = "Hintergrundbild",
+                            color = AppTheme.textColor,
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .height(150.dp)
+                                .width(250.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
+                                .background(AppTheme.background)
+                                .clickable {
+                                    backgroundImageSelectPopup.open()
+                                }
+                        ) {
+                            selectedThemeBackgroundImage?.let {
+                                ImageView(
+                                    image = it,
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            }
+                        }
+
+                        SettingsImageSelectPopup(
+                            state = backgroundImageSelectPopup,
+                            title = "Hintergrundbild auswählen",
+                            images = (listOfNotNull(themeBackgroundImage) + themeImages).distinctBy { it.path },
+                            onSelect = { backgroundImage ->
+                                selectedThemeBackgroundImage = backgroundImage
+                                backgroundImageSelectPopup.close()
+                            }
+                        )
+                    }
                 }
             }
 
@@ -605,12 +952,6 @@ fun ConfigurationScreen(
                         onClick = { save() },
                         modifier = Modifier.width(200.dp),
                     )
-                }
-            }
-
-            item {
-                SettingsSection(title = "Licenses") {
-                    LibrariesView()
                 }
             }
         }

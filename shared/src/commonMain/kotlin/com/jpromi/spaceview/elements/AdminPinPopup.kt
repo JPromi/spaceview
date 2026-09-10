@@ -37,10 +37,12 @@ import com.jpromi.spaceview.AppSettings
 
 @Composable
 fun AdminPinPopup(
-    onDismiss: () -> Unit,
+    state: PopupState,
     onValidPinEnteredFunction: () -> Unit,
     appSettings: AppSettings,
 ) {
+    if (!state.isVisible) return
+
     val pinLength = 4
     var pinState by remember { mutableStateOf("") }
     var hasError by remember { mutableStateOf(false) }
@@ -51,7 +53,7 @@ fun AdminPinPopup(
     }
 
     Popup(
-        onDismissRequest = onDismiss,
+        onDismissRequest = state::close,
         alignment = Alignment.Center,
         properties = PopupProperties(focusable = true),
     ) {
@@ -87,7 +89,7 @@ fun AdminPinPopup(
 
                         if (sanitizedValue.length == pinLength) {
                             if (sanitizedValue == appSettings.adminPin) {
-                                onDismiss()
+                                state.close()
                                 onValidPinEnteredFunction()
                             } else {
                                 hasError = true

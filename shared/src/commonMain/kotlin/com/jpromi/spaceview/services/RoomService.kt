@@ -23,7 +23,6 @@ interface RoomService {
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
     ): ApiResult<List<Slot>>
-    fun getLogoUrl() : String
     suspend fun getRoomUse(
         roomId: String,
         date: LocalDate = Clock.System.now()
