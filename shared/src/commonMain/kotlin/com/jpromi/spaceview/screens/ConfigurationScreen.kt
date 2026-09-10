@@ -892,7 +892,7 @@ fun ConfigurationScreen(
 
                                     modifier = Modifier
                                         .fillMaxSize(),
-                                    contentScale = ContentScale.FillBounds,
+                                    contentScale = ContentScale.Crop,
                                 )
                             }
                         }
