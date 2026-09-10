@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -123,48 +124,55 @@ fun SettingsImageSelectPopup(
                 ScrollColumn(
                     verticalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
-                    for (image: Image in images.orEmpty()) {
-                        item {
-                            Column(
-                                modifier = Modifier
-                                    .height(225.dp)
-                                    .width(250.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        onSelect?.invoke(image)
-                                    }
-                            ) {
-                                when (image.sourceType) {
-                                    AssetSourceType.REMOTE -> {
-                                        AsyncImage(
-                                            model = image.path,
-                                            contentDescription = image.description,
+                    item {
+                        FlowRow(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            for (image: Image in images.orEmpty()) {
+                                Column(
+                                    modifier = Modifier
+                                        .height(189.dp)
+                                        .width(250.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(16.dp))
+                                        .clickable {
+                                            onSelect?.invoke(image)
+                                        }
+                                ) {
+                                    when (image.sourceType) {
+                                        AssetSourceType.REMOTE -> {
+                                            AsyncImage(
+                                                model = image.path,
+                                                contentDescription = image.description,
 
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .fillMaxWidth()
+                                            )
+                                        }
+                                        else -> {
+
+                                        }
+                                    }
+
+                                    if (image.description != null) {
+                                        HorizontalDivider(
+                                            color = AppTheme.borderSettings,
+                                        )
+
+                                        Text(
+                                            text = image.description,
+                                            color = AppTheme.textColor,
                                             modifier = Modifier
-                                                .weight(1f)
                                                 .fillMaxWidth()
+                                                .padding(12.dp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
                                         )
                                     }
-                                    else -> {
-
-                                    }
-                                }
-
-                                if (image.description != null) {
-                                    HorizontalDivider(
-                                        color = AppTheme.borderSettings,
-                                    )
-
-                                    Text(
-                                        text = image.description,
-                                        color = AppTheme.textColor,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(12.dp),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
                                 }
                             }
                         }
