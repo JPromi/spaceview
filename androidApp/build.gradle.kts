@@ -11,13 +11,13 @@ val androidVersionCode = providers.gradleProperty("android.versionCode").orElse(
 val keystoreFile = System.getenv("KEYSTORE_FILE")
 val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
 val keyAliasEnv = System.getenv("KEY_ALIAS")
-val keyPassword = System.getenv("KEY_PASSWORD")
+val keyPasswordEnv = System.getenv("KEY_PASSWORD")
 
 val hasSigningConfig =
     !keystoreFile.isNullOrBlank() &&
     !keystorePassword.isNullOrBlank() &&
     !keyAliasEnv.isNullOrBlank() &&
-    !keyPassword.isNullOrBlank()
+    !keyPasswordEnv.isNullOrBlank()
 
 kotlin {
     compilerOptions {
@@ -64,7 +64,7 @@ android {
                 storeFile = resolvedKeystoreFile
                 storePassword = keystorePassword
                 keyAlias = keyAliasEnv
-                keyPassword = keyPassword
+                keyPassword = keyPasswordEnv
             }
         }
     }
