@@ -445,7 +445,6 @@ fun ConfigurationScreen(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.background)
             .windowInsetsPadding(WindowInsets.displayCutout),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

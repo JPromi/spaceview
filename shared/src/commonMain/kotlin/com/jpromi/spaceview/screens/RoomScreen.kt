@@ -176,7 +176,6 @@ fun RoomScreen(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = AppTheme.background)
             .padding(32.dp)
             .windowInsetsPadding(WindowInsets.displayCutout)
     ) {
