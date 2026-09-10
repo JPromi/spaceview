@@ -59,7 +59,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import com.composables.icons.lucide.Calendar
 import com.composables.icons.lucide.CircleCheck
 import com.composables.icons.lucide.CircleX
@@ -73,6 +72,7 @@ import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
+import com.jpromi.spaceview.elements.ImageView
 import com.jpromi.spaceview.elements.SettingsImageSelectPopup
 import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.jpromi.spaceview.elements.forms.SettingsButton
@@ -843,13 +843,11 @@ fun ConfigurationScreen(
                                 }
                         ) {
                             selectedThemeLogo?.let {
-                                AsyncImage(
-                                    model = it.path,
-                                    contentDescription = it.description,
-
+                                ImageView(
+                                    image = it,
                                     modifier = Modifier
                                         .padding(8.dp)
-                                        .fillMaxSize()
+                                        .fillMaxSize(),
                                 )
                             }
                         }
@@ -885,10 +883,8 @@ fun ConfigurationScreen(
                                 }
                         ) {
                             selectedThemeBackgroundImage?.let {
-                                AsyncImage(
-                                    model = it.path,
-                                    contentDescription = it.description,
-
+                                ImageView(
+                                    image = it,
                                     modifier = Modifier
                                         .fillMaxSize(),
                                     contentScale = ContentScale.Crop,

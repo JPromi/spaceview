@@ -142,21 +142,12 @@ fun SettingsImageSelectPopup(
                                             onSelect?.invoke(image)
                                         }
                                 ) {
-                                    when (image.sourceType) {
-                                        AssetSourceType.REMOTE -> {
-                                            AsyncImage(
-                                                model = image.path,
-                                                contentDescription = image.description,
-
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .fillMaxWidth()
-                                            )
-                                        }
-                                        else -> {
-
-                                        }
-                                    }
+                                    ImageView(
+                                        image = image,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxWidth(),
+                                    )
 
                                     if (image.description != null) {
                                         HorizontalDivider(
