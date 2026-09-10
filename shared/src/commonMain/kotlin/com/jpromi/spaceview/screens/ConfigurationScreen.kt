@@ -857,7 +857,7 @@ fun ConfigurationScreen(
                         SettingsImageSelectPopup(
                             state = logoSelectPopup,
                             title = "Logo auswählen",
-                            images = themeLogo?.let { listOf(it) } ?: emptyList(),
+                            images = (listOfNotNull(themeLogo) + themeImages).distinctBy { it.path },
                             onSelect = { logo ->
                                 selectedThemeLogo = logo
                                 logoSelectPopup.close()
