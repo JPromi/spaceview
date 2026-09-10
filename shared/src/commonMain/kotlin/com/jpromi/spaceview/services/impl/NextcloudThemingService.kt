@@ -1,6 +1,8 @@
 package com.jpromi.spaceview.services.impl
 
 import androidx.compose.ui.graphics.Color
+import com.jpromi.spaceview.enums.AssetSourceType
+import com.jpromi.spaceview.models.Image
 import com.jpromi.spaceview.network.ApiResult
 import com.jpromi.spaceview.network.toHttpBaseUrl
 import com.jpromi.spaceview.services.NextcloudService
@@ -45,18 +47,26 @@ class NextcloudThemingService(
     }
 
     override suspend fun getLogo(): String? {
-        val requestUrl = "${baseUrl.removeIndexPhp()}/core/css/guest.scss"
-        val defaultCss = nextcloudService.getNextcloudPage(requestUrl)
+        var requestUrl = "${baseUrl}/apps/theming/theme/dark.css"
+        val darkCss = nextcloudService.getNextcloudPage(requestUrl)
 
-        if (defaultCss is ApiResult.Success) {
-            // check variable
+        if (darkCss is ApiResult.Success) {
+            val defaultRegex = Regex("""background-image\s*:\s*var\(\s*--image-logo\s*,\s*url\(\s*['"]?([^'")]+)['"]?\s*\)\s*\)""")
             val varRegex = Regex("""--image-logo\s*:\s*url\(\s*['"]?([^'")]+)['"]?\s*\)""")
-            var match = varRegex.find(defaultCss.data)
+
+            // var
+            var match = varRegex.find(darkCss.data)
 
             if (match == null) {
-                // check default logo
-                val defaultRegex = Regex("""background-image\s*:\s*var\(\s*--image-logo\s*,\s*url\(\s*['"]?([^'")]+)['"]?\s*\)\s*\)""")
-                match = defaultRegex.find(defaultCss.data)
+                // default fallback
+                requestUrl = "${baseUrl.removeIndexPhp()}/core/css/guest.css"
+                val guestCss = nextcloudService.getNextcloudPage(requestUrl)
+
+                if (guestCss is ApiResult.Success) {
+                    match = defaultRegex.find(guestCss.data)
+                } else {
+                    return null
+                }
             }
 
             return getNextcloudImageUrl(match?.groupValues[1], requestUrl)
@@ -87,6 +97,84 @@ class NextcloudThemingService(
         // return "${resolvedBaseUrl.toHttpBaseUrl()}/apps/theming/image/background"
     }
 
+    override suspend fun getImageLibrary(): List<Image> {
+        val requestUrl = "$baseUrl/SPACEVIEW_FORCE_ERROR"
+        val htmlPage = nextcloudService.getNextcloudPage(requestUrl)
+
+        val imageRegex = Regex(
+            """(?:url\(\s*['"]?|src\s*=\s*['"]|href\s*=\s*['"])((?:[^"'()\s;{}<>]+?\.(?:png|jpe?g|webp|svg|avif|bmp|ico)(?:[?#][^"'()\s;{}<>]*)?)|(?:[^"'()\s;{}<>]+?/(?:logo|background)(?:[?#][^"'()\s;{}<>]*)?))""",
+            RegexOption.IGNORE_CASE
+                )
+
+        val regexGetAllCssFiles = Regex(
+            """<link\b(?=[^>]*\brel\s*=\s*["'][^"']*\bstylesheet\b[^"']*["'])[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>""",
+            RegexOption.IGNORE_CASE
+        )
+
+        val imageFiles = mutableListOf<Image>()
+        val cssFiles = mutableListOf<String>()
+
+        fun extractImages(
+            content: String,
+            sourceUrl: String
+        ) {
+            imageFiles += imageRegex.findAll(content)
+                .mapNotNull { match ->
+                    val imageUrl = getNextcloudImageUrl(
+                        path = match.groupValues[1],
+                        requestUrl = sourceUrl
+                    )
+
+                    if (isProbablyUiIcon(match.groupValues[1])) {
+                        return@mapNotNull null
+                    }
+
+                    imageUrl?.let {
+                        Image(
+                            sourceType = AssetSourceType.REMOTE,
+                            description = "Nextcloud",
+                            copyright = "Your Nextcloud Server",
+                            path = it
+                        )
+                    }
+                }
+                .toList()
+        }
+
+        if (htmlPage is ApiResult.Success) {
+            // extract from HTML
+            extractImages(
+                content = htmlPage.data,
+                sourceUrl = requestUrl
+            )
+
+            // extract CSS Files
+            cssFiles += regexGetAllCssFiles.findAll(htmlPage.data)
+                .map { it.groupValues[1] }
+                .toList()
+
+            // Load CSS and search for images
+            for (cssFile in cssFiles) {
+                val cssUrl = getNextcloudImageUrl(
+                    path = cssFile,
+                    requestUrl = requestUrl
+                ) ?: continue
+
+                val cssContent = nextcloudService.getNextcloudPage(cssUrl)
+
+                if (cssContent is ApiResult.Success) {
+                    extractImages(
+                        content = cssContent.data,
+                        sourceUrl = cssUrl
+                    )
+                }
+            }
+        }
+
+        return imageFiles
+            .distinctBy { it.path }
+    }
+
     private fun getNextcloudImageUrl(path: String?, requestUrl: String? = null): String? {
         var _baseUrl = baseUrl
         if (requestUrl != null) {
@@ -99,6 +187,15 @@ class NextcloudThemingService(
                 return path
             }
 
+            if (path.startsWith("/")) {
+                _baseUrl = _baseUrl
+                    .substringBefore("://")
+                    .let { scheme ->
+                        val rest = _baseUrl.substringAfter("://")
+                        "$scheme://${rest.substringBefore('/')}"
+                    }
+            }
+
             val lastPart = path.substringAfterLast('/')
 
             return if ('.' in lastPart) {
@@ -109,6 +206,26 @@ class NextcloudThemingService(
         }
 
         return null;
+    }
+
+    private fun isProbablyUiIcon(path: String): Boolean {
+        val clean = path
+            .substringBefore('?')
+            .lowercase()
+
+        val fileName = clean.substringAfterLast('/')
+
+        return clean.contains("/img/actions/") ||
+                clean.contains("/img/filetypes/") ||
+                fileName.startsWith("favicon") ||
+                fileName.startsWith("loading") ||
+                fileName == "breadcrumb.svg" ||
+                fileName.startsWith("checkbox-") ||
+                fileName.startsWith("checkmark-") ||
+                fileName.startsWith("caret-") ||
+                fileName.startsWith("confirm") ||
+                fileName.startsWith("error-") ||
+                fileName.startsWith("info-")
     }
 
     private fun String.removeIndexPhp(): String {

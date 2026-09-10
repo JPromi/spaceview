@@ -55,6 +55,7 @@ import com.jpromi.spaceview.dtos.roomvox.RVRoomAvailabilityDTO
 import com.jpromi.spaceview.dtos.roomvox.RVRoomStatusDTO
 import com.jpromi.spaceview.elements.AdminPinPopup
 import com.jpromi.spaceview.elements.AppInfoPopup
+import com.jpromi.spaceview.elements.ImageView
 import com.jpromi.spaceview.elements.forms.SettingsButton
 import com.jpromi.spaceview.elements.rememberAppInfoPopupState
 import com.jpromi.spaceview.elements.rememberPopupState
@@ -176,7 +177,6 @@ fun RoomScreen(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = AppTheme.background)
             .padding(32.dp)
             .windowInsetsPadding(WindowInsets.displayCutout)
     ) {
@@ -214,14 +214,11 @@ fun RoomScreen(
                     //Logo
                     Box()
                     {
-
-                        if (appSettings.logo != null) {
-                            AsyncImage(
-                                model = appSettings.logo?.path, // works whether it resolves to .png or .svg
-                                contentDescription = appSettings.logo?.description ?: "Logo",
-                                modifier = Modifier.fillMaxHeight()
-                            )
-                        }
+                        ImageView(
+                            image = appSettings.logo,
+                            modifier = Modifier
+                                .fillMaxHeight(),
+                        )
                     }
 
                     // Settings

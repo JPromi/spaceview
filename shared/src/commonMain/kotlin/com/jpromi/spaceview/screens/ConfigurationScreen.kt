@@ -59,7 +59,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import com.composables.icons.lucide.Calendar
 import com.composables.icons.lucide.CircleCheck
 import com.composables.icons.lucide.CircleX
@@ -73,6 +72,7 @@ import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
+import com.jpromi.spaceview.elements.ImageView
 import com.jpromi.spaceview.elements.SettingsImageSelectPopup
 import com.jpromi.spaceview.elements.forms.ScrollColumn
 import com.jpromi.spaceview.elements.forms.SettingsButton
@@ -147,6 +147,8 @@ fun ConfigurationScreen(
     val backgroundImageSelectPopup = rememberPopupState()
     var themeBackgroundImage: Image? by remember { mutableStateOf(null) }
     var selectedThemeBackgroundImage: Image? by remember { mutableStateOf(appSettings.backgroundImage) }
+
+    var themeImages: List<Image> by remember { mutableStateOf(emptyList()) }
 
     // Theme Color
     var selectedThemeColor: Color? by remember { mutableStateOf(appSettings.themeColor) }
@@ -241,15 +243,11 @@ fun ConfigurationScreen(
     }
 
     suspend fun loadTheme() {
-        // Color
-        themeColor = if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
-            themingService?.getThemeColor()
-        } else {
-            null
-        }
 
-        // Logo / Background Image
-        if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
+        // Color / Logo / Background Image
+        if (themingService != null) {
+            themeColor = themingService?.getThemeColor()
+
             val logoUrl = themingService?.getLogo()
             if (logoUrl != null) {
                 themeLogo = Image(
@@ -273,9 +271,9 @@ fun ConfigurationScreen(
             } else {
                 themeBackgroundImage = null
             }
-        }
 
-        // ToDo: Logo, Background, Images,...
+            themeImages = themingService?.getImageLibrary() ?: listOf();
+        }
     }
 
     fun selectThemeColor(color: Color?) {
@@ -324,8 +322,12 @@ fun ConfigurationScreen(
                         if (provider == CalendarProviderENUM.ROOMVOX) {
                             loadRooms()
                             themingService?.baseUrl = selectedRoomVoxServerUrl
+                        }
+
+                        coroutineScope.launch {
                             loadTheme()
                         }
+
                         "Verbunden"
                     }
 
@@ -443,7 +445,6 @@ fun ConfigurationScreen(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.background)
             .windowInsetsPadding(WindowInsets.displayCutout),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -842,13 +843,11 @@ fun ConfigurationScreen(
                                 }
                         ) {
                             selectedThemeLogo?.let {
-                                AsyncImage(
-                                    model = it.path,
-                                    contentDescription = it.description,
-
+                                ImageView(
+                                    image = it,
                                     modifier = Modifier
                                         .padding(8.dp)
-                                        .fillMaxSize()
+                                        .fillMaxSize(),
                                 )
                             }
                         }
@@ -856,7 +855,7 @@ fun ConfigurationScreen(
                         SettingsImageSelectPopup(
                             state = logoSelectPopup,
                             title = "Logo auswählen",
-                            images = themeLogo?.let { listOf(it) } ?: emptyList(),
+                            images = (listOfNotNull(themeLogo) + themeImages).distinctBy { it.path },
                             onSelect = { logo ->
                                 selectedThemeLogo = logo
                                 logoSelectPopup.close()
@@ -884,13 +883,11 @@ fun ConfigurationScreen(
                                 }
                         ) {
                             selectedThemeBackgroundImage?.let {
-                                AsyncImage(
-                                    model = it.path,
-                                    contentDescription = it.description,
-
+                                ImageView(
+                                    image = it,
                                     modifier = Modifier
                                         .fillMaxSize(),
-                                    contentScale = ContentScale.FillBounds,
+                                    contentScale = ContentScale.Crop,
                                 )
                             }
                         }
@@ -898,7 +895,7 @@ fun ConfigurationScreen(
                         SettingsImageSelectPopup(
                             state = backgroundImageSelectPopup,
                             title = "Hintergrundbild auswählen",
-                            images = themeBackgroundImage?.let { listOf(it) } ?: emptyList(),
+                            images = (listOfNotNull(themeBackgroundImage) + themeImages).distinctBy { it.path },
                             onSelect = { backgroundImage ->
                                 selectedThemeBackgroundImage = backgroundImage
                                 backgroundImageSelectPopup.close()

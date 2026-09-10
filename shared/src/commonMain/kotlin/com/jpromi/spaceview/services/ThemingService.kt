@@ -1,14 +1,12 @@
 package com.jpromi.spaceview.services
 
 import androidx.compose.ui.graphics.Color
+import com.jpromi.spaceview.models.Image
 import com.jpromi.spaceview.models.Room
 
 interface ThemingService {
-    // get Logo
-    // get BackgroundImage
     // get BackgroundColor
     // get Images
-    // get ThemeColor
 
     var baseUrl: String
 
@@ -17,4 +15,6 @@ interface ThemingService {
     suspend fun getLogo(): String?
 
     suspend fun getBackgroundImage(): String?
+
+    suspend fun getImageLibrary(): List<Image>
 }
