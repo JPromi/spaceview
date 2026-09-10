@@ -14,10 +14,10 @@ val keyAliasEnv = System.getenv("KEY_ALIAS")
 val keyPassword = System.getenv("KEY_PASSWORD")
 
 val hasSigningConfig =
-    keystoreFile != null &&
-    keystorePassword != null &&
-    keyAliasEnv != null &&
-    keyPassword != null
+    !keystoreFile.isNullOrBlank() &&
+    !keystorePassword.isNullOrBlank() &&
+    !keyAliasEnv.isNullOrBlank() &&
+    !keyPassword.isNullOrBlank()
 
 kotlin {
     compilerOptions {
@@ -53,7 +53,15 @@ android {
     if (hasSigningConfig) {
         signingConfigs {
             create("release") {
-                storeFile = file(keystoreFile!!)
+                val resolvedKeystoreFile = file(keystoreFile!!)
+                require(resolvedKeystoreFile.isFile) {
+                    "Release signing keystore was not found at: ${resolvedKeystoreFile.absolutePath}"
+                }
+                require(resolvedKeystoreFile.length() > 0) {
+                    "Release signing keystore is empty: ${resolvedKeystoreFile.absolutePath}"
+                }
+
+                storeFile = resolvedKeystoreFile
                 storePassword = keystorePassword
                 keyAlias = keyAliasEnv
                 keyPassword = keyPassword
