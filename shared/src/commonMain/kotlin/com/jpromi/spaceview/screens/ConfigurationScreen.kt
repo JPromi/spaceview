@@ -148,6 +148,8 @@ fun ConfigurationScreen(
     var themeBackgroundImage: Image? by remember { mutableStateOf(null) }
     var selectedThemeBackgroundImage: Image? by remember { mutableStateOf(appSettings.backgroundImage) }
 
+    var themeImages: List<Image> by remember { mutableStateOf(emptyList()) }
+
     // Theme Color
     var selectedThemeColor: Color? by remember { mutableStateOf(appSettings.themeColor) }
     var inputThemeColor: String by remember { mutableStateOf(appSettings.themeColor?.toHexCode() ?: "") }
@@ -241,15 +243,11 @@ fun ConfigurationScreen(
     }
 
     suspend fun loadTheme() {
-        // Color
-        themeColor = if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
-            themingService?.getThemeColor()
-        } else {
-            null
-        }
 
-        // Logo / Background Image
-        if (selectedProvider == CalendarProviderENUM.ROOMVOX) {
+        // Color / Logo / Background Image
+        if (themingService != null) {
+            themeColor = themingService?.getThemeColor()
+
             val logoUrl = themingService?.getLogo()
             if (logoUrl != null) {
                 themeLogo = Image(
@@ -273,9 +271,9 @@ fun ConfigurationScreen(
             } else {
                 themeBackgroundImage = null
             }
-        }
 
-        // ToDo: Images,...
+            themeImages = themingService?.getImageLibrary() ?: listOf();
+        }
     }
 
     fun selectThemeColor(color: Color?) {
@@ -324,8 +322,12 @@ fun ConfigurationScreen(
                         if (provider == CalendarProviderENUM.ROOMVOX) {
                             loadRooms()
                             themingService?.baseUrl = selectedRoomVoxServerUrl
+                        }
+
+                        coroutineScope.launch {
                             loadTheme()
                         }
+
                         "Verbunden"
                     }
 
@@ -898,7 +900,7 @@ fun ConfigurationScreen(
                         SettingsImageSelectPopup(
                             state = backgroundImageSelectPopup,
                             title = "Hintergrundbild auswählen",
-                            images = themeBackgroundImage?.let { listOf(it) } ?: emptyList(),
+                            images = (listOfNotNull(themeBackgroundImage) + themeImages).distinctBy { it.path },
                             onSelect = { backgroundImage ->
                                 selectedThemeBackgroundImage = backgroundImage
                                 backgroundImageSelectPopup.close()
