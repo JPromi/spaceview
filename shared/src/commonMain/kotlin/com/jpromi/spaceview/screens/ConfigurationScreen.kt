@@ -34,6 +34,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -67,6 +69,7 @@ import com.composables.icons.lucide.Paperclip
 import com.composables.icons.lucide.Server
 import com.composables.icons.lucide.Settings
 import com.composables.icons.lucide.Shield
+import com.composables.icons.lucide.X
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
@@ -832,7 +835,7 @@ fun ConfigurationScreen(
                             color = AppTheme.textColor,
                         )
 
-                        Column(
+                        Box(
                             modifier = Modifier
                                 .size(150.dp)
                                 .clip(RoundedCornerShape(4.dp))
@@ -848,6 +851,29 @@ fun ConfigurationScreen(
                                     modifier = Modifier
                                         .padding(8.dp)
                                         .fillMaxSize(),
+                                )
+
+                                IconButton(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .align(Alignment.TopEnd)
+                                        .padding(6.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = AppTheme.textColorRed,
+                                        contentColor = AppTheme.textColor
+                                    ),
+                                    onClick = {
+                                        selectedThemeLogo = null
+                                    },
+                                    content = {
+                                        Icon(
+                                            imageVector = Lucide.X,
+                                            contentDescription = null,
+                                            tint = AppTheme.textColor,
+                                            modifier = Modifier
+                                                .fillMaxSize(.8f),
+                                        )
+                                    }
                                 )
                             }
                         }
@@ -871,7 +897,7 @@ fun ConfigurationScreen(
                             color = AppTheme.textColor,
                         )
 
-                        Column(
+                        Box(
                             modifier = Modifier
                                 .height(150.dp)
                                 .width(250.dp)
@@ -888,6 +914,29 @@ fun ConfigurationScreen(
                                     modifier = Modifier
                                         .fillMaxSize(),
                                     contentScale = ContentScale.Crop,
+                                )
+
+                                IconButton(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .align(Alignment.TopEnd)
+                                        .padding(6.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = AppTheme.textColorRed,
+                                        contentColor = AppTheme.textColor
+                                    ),
+                                    onClick = {
+                                        selectedThemeBackgroundImage = null
+                                    },
+                                    content = {
+                                        Icon(
+                                            imageVector = Lucide.X,
+                                            contentDescription = null,
+                                            tint = AppTheme.textColor,
+                                            modifier = Modifier
+                                                .fillMaxSize(.8f),
+                                        )
+                                    }
                                 )
                             }
                         }
