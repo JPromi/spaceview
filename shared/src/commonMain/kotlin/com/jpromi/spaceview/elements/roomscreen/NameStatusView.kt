@@ -28,18 +28,7 @@ import com.jpromi.spaceview.util.toMinuteOfDay
 import com.jpromi.spaceview.util.toTimeText
 
 @Composable
-fun NameStatusView(room: Room?, roomUse: RoomUse?, currentMinuteOfDay: Int) {
-    // name
-    Text(
-        text = room?.name ?: "",
-        modifier = Modifier.padding(bottom = 4.dp),
-        fontWeight = FontWeight.W500,
-        fontSize = 30.sp,
-        color = AppTheme.textColor,
-    )
-
-    Spacer(modifier = Modifier.height(20.dp))
-
+fun NameStatusView(roomUse: RoomUse?, currentMinuteOfDay: Int) {
     val background = if (roomUse?.currentEvent != null) AppTheme.busyTagBackground else AppTheme.freeTagBackground
     // status
     Box(

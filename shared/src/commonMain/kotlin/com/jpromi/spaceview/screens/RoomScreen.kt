@@ -39,7 +39,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,6 +90,7 @@ import kotlin.time.Duration.Companion.seconds
 import com.jpromi.spaceview.util.toTimeText
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun RoomScreen(
@@ -193,9 +196,28 @@ fun RoomScreen(
                 modifier = Modifier.weight(4f).fillMaxHeight(),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                // Datetime
-                Column(modifier = Modifier.weight(1f)) {
-                    DateTimeView(currentTime)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    room?.let {
+                        Text(
+                            text = it.name,
+                            modifier = Modifier,
+                            color = AppTheme.textColor,
+                            fontWeight = FontWeight.W600,
+                            fontSize = 42.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+
+                    // Datetime
+                    Column(modifier = Modifier) {
+                        DateTimeView(currentTime)
+                    }
                 }
 
                 // Name & Status
@@ -203,7 +225,7 @@ fun RoomScreen(
                     modifier = Modifier.weight(2f),
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    NameStatusView(room, roomUse, currentMinuteOfDay)
+                    NameStatusView(roomUse, currentMinuteOfDay)
                 }
 
                 Row(
