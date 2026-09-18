@@ -1,6 +1,7 @@
 package com.jpromi.spaceview.elements.roomscreen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -70,6 +71,7 @@ fun SlotView(roomUse: RoomUse?, currentMinuteOfDay: Int) {
                                 color = AppTheme.slotBackground,
                                 shape = RoundedCornerShape(12.dp),
                             )
+                            .border(1.dp, AppTheme.slotBorder, RoundedCornerShape(12.dp))
                             .padding(8.dp),
                     ) {
                         Row(

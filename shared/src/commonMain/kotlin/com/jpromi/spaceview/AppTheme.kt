@@ -24,6 +24,7 @@ object AppTheme {
     val textColorGreen = Color(0xff4caf50)
     val textColorRed = Color(0xfff44336)
     val slotBackground = Color(0x20f5f5f5)
+    val slotBorder = Color(0x35f5f5f5)
 
     val freeTagBackground = Color(0xff4caf50)
     val freeTabTextColor = Color(0xfff5f5f5)
