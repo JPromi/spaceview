@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -196,45 +197,54 @@ fun RoomScreen(
                 modifier = Modifier.weight(4f).fillMaxHeight(),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                Row(
+                Column(
                     modifier = Modifier
+                        .weight(3f)
                         .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    room?.let {
-                        Text(
-                            text = it.name,
-                            modifier = Modifier,
-                            color = AppTheme.textColor,
-                            fontWeight = FontWeight.W600,
-                            fontSize = 42.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        room?.let {
+                            Text(
+                                text = it.name,
+                                modifier = Modifier,
+                                color = AppTheme.textColor,
+                                fontWeight = FontWeight.W600,
+                                fontSize = 42.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
 
-                    // Datetime
-                    Column(modifier = Modifier) {
-                        DateTimeView(currentTime)
+                        // Datetime
+                        Column(modifier = Modifier) {
+                            DateTimeView(currentTime)
+                        }
                     }
                 }
 
                 // Name & Status
                 Column(
-                    modifier = Modifier.weight(2f),
+                    modifier = Modifier.weight(4f),
                     verticalArrangement = Arrangement.Center,
                 ) {
                     NameStatusView(roomUse, currentMinuteOfDay)
                 }
 
                 Row(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    modifier = Modifier.weight(2f).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    //Logo
-                    Box()
+                    // Logo
+                    Box(
+                        modifier = Modifier
+                            .weight(2f),
+                    )
                     {
                         ImageView(
                             image = appSettings.logo,
@@ -245,7 +255,13 @@ fun RoomScreen(
 
                     // Settings
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            8.dp,
+                            alignment = Alignment.End
+                        ),
+                        verticalAlignment = Alignment.Bottom,
                     )
                     {
                         RoundIconButton(
