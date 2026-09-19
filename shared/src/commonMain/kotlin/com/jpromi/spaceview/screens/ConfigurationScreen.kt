@@ -70,6 +70,8 @@ import com.composables.icons.lucide.Server
 import com.composables.icons.lucide.Settings
 import com.composables.icons.lucide.Shield
 import com.composables.icons.lucide.X
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.rememberHazeState
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.controllers.LocalFullscreenController
@@ -116,6 +118,7 @@ fun ConfigurationScreen(
     onGoBack: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
     calendarSettings: CalendarSettings = remember { CalendarSettings() },
+    hazeState: HazeState = rememberHazeState(),
 ) {
     var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
     var themingService by remember { mutableStateOf<ThemingService?>(null) }
@@ -195,6 +198,7 @@ fun ConfigurationScreen(
     var isLoadingRooms by remember { mutableStateOf(false) }
     var loadRoomsMessage by remember { mutableStateOf<String?>(null) }
     var themeColor by remember { mutableStateOf<Color?>(null) }
+    val withBlur = appSettings.backgroundImage != null
 
     fun selectCalendarProvider(provider: CalendarProviderENUM) {
         selectedProvider = provider
@@ -523,7 +527,9 @@ fun ConfigurationScreen(
             // Provider
             item {
                 SettingsSection(
-                    title = "Provider"
+                    title = "Provider",
+                    hazeState = hazeState,
+                    withBlur = withBlur,
                 ) {
 
                     val providers: List<CalendarProvider> = listOf(
@@ -562,7 +568,9 @@ fun ConfigurationScreen(
                         CalendarProviderENUM.ROOMVOX -> {
                             SettingsSection(
                                 title = "RoomVox Provider",
-                                transparentBackground = true
+                                transparentBackground = true,
+                                hazeState = hazeState,
+                                withBlur = withBlur,
                             ) {
 
                                 SettingsTextInput(
@@ -650,7 +658,9 @@ fun ConfigurationScreen(
                         CalendarProviderENUM.ICS -> {
                             SettingsSection(
                                 title = "iCal Provider",
-                                transparentBackground = true
+                                transparentBackground = true,
+                                hazeState = hazeState,
+                                withBlur = withBlur,
                             ) {
                                 SettingsTextInput(
                                     label = "URL",
@@ -727,7 +737,9 @@ fun ConfigurationScreen(
             // Calendar
             item {
                 SettingsSection(
-                    title = "Kalender"
+                    title = "Kalender",
+                    hazeState = hazeState,
+                    withBlur = withBlur,
                 ) {
                     if (selectedProvider == CalendarProviderENUM.ROOMVOX || selectedProvider == CalendarProviderENUM.DEMO) {
                         SettingsDropdown(
@@ -756,7 +768,11 @@ fun ConfigurationScreen(
 
             // Application
             item {
-                SettingsSection(title = "Applikation") {
+                SettingsSection(
+                    title = "Applikation",
+                    hazeState = hazeState,
+                    withBlur = withBlur,
+                ) {
                     SettingsSwitch(
                         checked = fullscreen,
                         onCheckedChange = {
@@ -957,7 +973,11 @@ fun ConfigurationScreen(
             // Admin
             item {
 
-                SettingsSection(title = "Admin") {
+                SettingsSection(
+                    title = "Admin",
+                    hazeState = hazeState,
+                    withBlur = withBlur,
+                ) {
                     SettingsSwitch(
                         checked = adminPinActive,
                         onCheckedChange = {

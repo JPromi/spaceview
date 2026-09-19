@@ -63,6 +63,7 @@ fun App() {
                         currentScreen = Screen.Room
                     },
                     appSettings = appSettings,
+                    hazeState = hazeState,
                 )
                 Screen.Room -> RoomScreen(
                     onOpenConfiguration = { currentScreen = Screen.Configuration },
