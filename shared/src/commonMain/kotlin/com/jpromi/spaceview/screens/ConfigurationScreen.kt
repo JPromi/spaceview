@@ -74,6 +74,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.getPlatform
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
 import com.jpromi.spaceview.elements.Expandable
@@ -199,6 +200,10 @@ fun ConfigurationScreen(
     var loadRoomsMessage by remember { mutableStateOf<String?>(null) }
     var themeColor by remember { mutableStateOf<Color?>(null) }
     val withBlur = appSettings.backgroundImage != null
+    val showFullscreenSetting = remember {
+        val platformName = getPlatform().name
+        listOf("JVM", "Web").contains(platformName)
+    }
 
     fun selectCalendarProvider(provider: CalendarProviderENUM) {
         selectedProvider = provider
@@ -773,13 +778,15 @@ fun ConfigurationScreen(
                     hazeState = hazeState,
                     withBlur = withBlur,
                 ) {
-                    SettingsSwitch(
-                        checked = fullscreen,
-                        onCheckedChange = {
-                            fullscreen = it
-                        },
-                        text = "Fullscreen",
-                    )
+                    if (showFullscreenSetting) {
+                        SettingsSwitch(
+                            checked = fullscreen,
+                            onCheckedChange = {
+                                fullscreen = it
+                            },
+                            text = "Fullscreen",
+                        )
+                    }
 
                     // Theme color selector
                     Column {
