@@ -14,11 +14,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.dtos.roomvox.toRoomVoxLocalDateTimeOrNull
 import com.jpromi.spaceview.enums.SlotStatus
@@ -28,15 +31,26 @@ import com.jpromi.spaceview.util.toMinuteOfDay
 import com.jpromi.spaceview.util.toTimeText
 
 @Composable
-fun NameStatusView(roomUse: RoomUse?, currentMinuteOfDay: Int) {
+fun NameStatusView(roomUse: RoomUse?, currentMinuteOfDay: Int, hazeState: HazeState, withBlurEffect: Boolean = false) {
+    val boxShape = RoundedCornerShape(12.dp)
+    var boxModifier = Modifier
+        .clip(RoundedCornerShape(12.dp));
+
     val background = if (roomUse?.currentEvent != null) AppTheme.busyTagBackground else AppTheme.freeTagBackground
+
+    if (withBlurEffect) {
+        boxModifier = boxModifier.hazeEffect(hazeState) {
+            blurRadius = 24.dp
+        }
+    }
+
     // status
     Box(
-        modifier = Modifier
+        modifier = boxModifier
             .border(
                 width = 1.dp,
                 color = background,
-                shape = RoundedCornerShape(12.dp)
+                shape = boxShape
             )
             .background(
                 brush = Brush.horizontalGradient(
@@ -45,7 +59,6 @@ fun NameStatusView(roomUse: RoomUse?, currentMinuteOfDay: Int) {
                         Color.Transparent
                     ),
                 ),
-                shape = RoundedCornerShape(12.dp),
             )
             .padding(12.dp)
             .height(100.dp)

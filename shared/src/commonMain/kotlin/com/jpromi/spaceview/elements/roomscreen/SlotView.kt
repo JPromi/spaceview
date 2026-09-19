@@ -18,8 +18,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.RoomUse
@@ -31,7 +35,7 @@ import kotlin.collections.map
 import kotlin.collections.orEmpty
 
 @Composable
-fun SlotView(roomUse: RoomUse?, currentMinuteOfDay: Int) {
+fun SlotView(roomUse: RoomUse?, currentMinuteOfDay: Int, hazeState: HazeState, withBlurEffect: Boolean = false) {
     val slots = roomUse?.slots.orEmpty().filter { slot ->
         slot.end.toMinuteOfDay() > currentMinuteOfDay
     }
@@ -63,15 +67,29 @@ fun SlotView(roomUse: RoomUse?, currentMinuteOfDay: Int) {
                 verticalArrangement = Arrangement.spacedBy(spacing),
             ) {
                 slots.forEachIndexed { index, slot ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(slotHeights[index])
-                            .background(
-                                color = AppTheme.slotBackground,
-                                shape = RoundedCornerShape(12.dp),
+                    val slotShape = RoundedCornerShape(12.dp)
+
+                    var slotModifier = Modifier
+                        .fillMaxWidth()
+                        .height(slotHeights[index])
+                        .clip(slotShape);
+
+                    slotModifier = if (withBlurEffect) {
+                        slotModifier.hazeEffect(
+                            state = hazeState
+                        ) {
+                            blurRadius = 20.dp
+                            blurredEdgeTreatment = BlurredEdgeTreatment(slotShape)
+                        }
+                    } else {
+                        slotModifier.background(
+                                color = AppTheme.slotBackground
                             )
-                            .border(1.dp, AppTheme.slotBorder, RoundedCornerShape(12.dp))
+                    }
+
+                    Column(
+                        modifier = slotModifier
+                            .border(1.dp, AppTheme.slotBorder, slotShape)
                             .padding(8.dp),
                     ) {
                         Row(

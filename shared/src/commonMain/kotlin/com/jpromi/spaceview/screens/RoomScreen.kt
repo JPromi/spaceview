@@ -51,6 +51,8 @@ import com.composables.icons.lucide.Info
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.RefreshCw
 import com.composables.icons.lucide.Settings
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.rememberHazeState
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.CalendarSettings
@@ -98,6 +100,7 @@ fun RoomScreen(
     onOpenConfiguration: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
     calendarSettings: CalendarSettings = CalendarSettings(),
+    hazeState: HazeState = rememberHazeState(),
 ) {
     var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
 
@@ -232,7 +235,7 @@ fun RoomScreen(
                     modifier = Modifier.weight(4f),
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    NameStatusView(roomUse, currentMinuteOfDay)
+                    NameStatusView(roomUse, currentMinuteOfDay, hazeState, (appSettings.backgroundImage != null))
                 }
 
                 Row(
@@ -303,7 +306,7 @@ fun RoomScreen(
 
                 // Slots
                 Column(modifier = Modifier.fillMaxHeight().weight(1f)) {
-                    SlotView(roomUse, currentMinuteOfDay)
+                    SlotView(roomUse, currentMinuteOfDay, hazeState, (appSettings.backgroundImage != null))
                 }
 
                 if (calendarSettings.showAddEvent) {

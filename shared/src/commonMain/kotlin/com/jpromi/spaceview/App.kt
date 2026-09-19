@@ -10,6 +10,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.elements.ImageView
 import com.jpromi.spaceview.screens.ConfigurationScreen
@@ -29,6 +31,7 @@ fun App() {
 
     AppTheme(themeColor = themeColor) {
         var currentScreen by remember { mutableStateOf(Screen.Room) }
+        val hazeState = rememberHazeState()
 
         Box(
             modifier = Modifier
@@ -36,13 +39,20 @@ fun App() {
                 .background(AppTheme.background),
         ) {
             // Background
-            if (appSettings.backgroundImage != null) {
-                ImageView(
-                    image = appSettings.backgroundImage,
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(AppTheme.background)
+                    .hazeSource(hazeState),
+            ) {
+                if (appSettings.backgroundImage != null) {
+                    ImageView(
+                        image = appSettings.backgroundImage,
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
             }
 
             // App
@@ -57,6 +67,7 @@ fun App() {
                 Screen.Room -> RoomScreen(
                     onOpenConfiguration = { currentScreen = Screen.Configuration },
                     appSettings = appSettings,
+                    hazeState = hazeState,
                 )
             }
         }
