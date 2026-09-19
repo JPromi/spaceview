@@ -62,9 +62,9 @@ fun <T> SettingsDropdown(
                         .border(.5.dp, AppTheme.borderSettings, shape = RoundedCornerShape(8.dp)),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppTheme.background,
+                        containerColor = AppTheme.formBackground,
                         contentColor = AppTheme.textColor,
-                        disabledContainerColor = AppTheme.background,
+                        disabledContainerColor = AppTheme.formBackground,
                         disabledContentColor = AppTheme.textColor.copy(alpha = .75f),
                     ),
                 ) {

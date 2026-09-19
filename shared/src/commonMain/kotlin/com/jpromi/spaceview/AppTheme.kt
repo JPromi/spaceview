@@ -32,6 +32,7 @@ object AppTheme {
     val busyTagBackground = Color(0xfff44336)
     val busyTabTextColor = Color(0xfff5f5f5)
 
+    val formBackground = Color(0x85000D1F)
     val backgroundSettings = Color(0x15f5f5f5)
     val borderSettings = Color(0x30f5f5f5)
     val linkColor = Color(0xff778FDC)

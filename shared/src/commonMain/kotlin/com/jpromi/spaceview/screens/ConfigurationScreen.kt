@@ -856,7 +856,7 @@ fun ConfigurationScreen(
                                 .size(150.dp)
                                 .clip(RoundedCornerShape(4.dp))
                                 .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
-                                .background(AppTheme.background)
+                                .background(AppTheme.formBackground)
                                 .clickable {
                                     logoSelectPopup.open()
                                 }
@@ -919,7 +919,7 @@ fun ConfigurationScreen(
                                 .width(250.dp)
                                 .clip(RoundedCornerShape(4.dp))
                                 .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
-                                .background(AppTheme.background)
+                                .background(AppTheme.formBackground)
                                 .clickable {
                                     backgroundImageSelectPopup.open()
                                 }
