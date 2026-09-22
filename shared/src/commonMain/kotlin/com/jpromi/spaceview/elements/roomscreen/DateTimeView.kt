@@ -21,7 +21,7 @@ fun DateTimeView(currentDateTime: LocalDateTime) {
     val currentDateText = currentDateTime.toDateText()
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.End,
     ) {
         Text(
             text = currentTimeText,
