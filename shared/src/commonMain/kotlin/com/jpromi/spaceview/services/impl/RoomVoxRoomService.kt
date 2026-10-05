@@ -26,6 +26,10 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import com.jpromi.spaceview.dtos.roomvox.toRoomVoxLocalDateTimeOrNull
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import spaceview.shared.generated.resources.Res
+import spaceview.shared.generated.resources.settings_message_no_url_text
 
 class RoomVoxRoomService(
     private val calendarSettings: CalendarSettings = CalendarSettings(),
@@ -253,7 +257,7 @@ class RoomVoxRoomService(
     // execute request
     private suspend fun <T> executeRoomVoxRequest(request: suspend (HttpClient) -> T): ApiResult<T> =
         executeRequest(
-            invalidRequestMessage = "Bitte Server-URL eingeben.",
+            invalidRequestMessage = getString(Res.string.settings_message_no_url_text),
             isRequestValid = { effectiveServerUrl.isNotBlank() },
             request = request,
         )

@@ -14,11 +14,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.dtos.roomvox.toRoomVoxLocalDateTimeOrNull
 import com.jpromi.spaceview.enums.SlotStatus
@@ -26,28 +29,33 @@ import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.models.RoomUse
 import com.jpromi.spaceview.util.toMinuteOfDay
 import com.jpromi.spaceview.util.toTimeText
+import org.jetbrains.compose.resources.stringResource
+import spaceview.shared.generated.resources.Res
+import spaceview.shared.generated.resources.roomview_booking_booked
+import spaceview.shared.generated.resources.roomview_booking_free
+import spaceview.shared.generated.resources.roomview_booking_unknown
 
 @Composable
-fun NameStatusView(room: Room?, roomUse: RoomUse?, currentMinuteOfDay: Int) {
-    // name
-    Text(
-        text = room?.name ?: "",
-        modifier = Modifier.padding(bottom = 4.dp),
-        fontWeight = FontWeight.W500,
-        fontSize = 30.sp,
-        color = AppTheme.textColor,
-    )
-
-    Spacer(modifier = Modifier.height(20.dp))
+fun NameStatusView(roomUse: RoomUse?, currentMinuteOfDay: Int, hazeState: HazeState, withBlurEffect: Boolean = false) {
+    val boxShape = RoundedCornerShape(12.dp)
+    var boxModifier = Modifier
+        .clip(RoundedCornerShape(12.dp));
 
     val background = if (roomUse?.currentEvent != null) AppTheme.busyTagBackground else AppTheme.freeTagBackground
+
+    if (withBlurEffect) {
+        boxModifier = boxModifier.hazeEffect(hazeState) {
+            blurRadius = 24.dp
+        }
+    }
+
     // status
     Box(
-        modifier = Modifier
+        modifier = boxModifier
             .border(
                 width = 1.dp,
                 color = background,
-                shape = RoundedCornerShape(12.dp)
+                shape = boxShape
             )
             .background(
                 brush = Brush.horizontalGradient(
@@ -56,7 +64,6 @@ fun NameStatusView(room: Room?, roomUse: RoomUse?, currentMinuteOfDay: Int) {
                         Color.Transparent
                     ),
                 ),
-                shape = RoundedCornerShape(12.dp),
             )
             .padding(12.dp)
             .height(100.dp)
@@ -71,9 +78,9 @@ fun NameStatusView(room: Room?, roomUse: RoomUse?, currentMinuteOfDay: Int) {
         ) {
             Text(
                 text = when {
-                    roomUse == null || roomUse.slots.isEmpty() -> "Unbekannt"
-                    roomUse.currentEvent != null -> "Belegt"
-                    else -> "Frei"
+                    roomUse == null || roomUse.slots.isEmpty() -> stringResource(Res.string.roomview_booking_unknown)
+                    roomUse.currentEvent != null -> stringResource(Res.string.roomview_booking_booked)
+                    else -> stringResource(Res.string.roomview_booking_free)
                 },
                 color = AppTheme.textColor,
                 fontWeight = FontWeight.W700,

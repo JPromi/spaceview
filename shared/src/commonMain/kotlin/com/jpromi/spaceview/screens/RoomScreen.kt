@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,7 +40,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,6 +51,8 @@ import com.composables.icons.lucide.Info
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.RefreshCw
 import com.composables.icons.lucide.Settings
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.rememberHazeState
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
 import com.jpromi.spaceview.CalendarSettings
@@ -88,12 +93,16 @@ import kotlin.time.Duration.Companion.seconds
 import com.jpromi.spaceview.util.toTimeText
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import spaceview.shared.generated.resources.Res
+import spaceview.shared.generated.resources.roomview_new_event
 
 @Composable
 fun RoomScreen(
     onOpenConfiguration: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
     calendarSettings: CalendarSettings = CalendarSettings(),
+    hazeState: HazeState = rememberHazeState(),
 ) {
     var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
 
@@ -193,26 +202,54 @@ fun RoomScreen(
                 modifier = Modifier.weight(4f).fillMaxHeight(),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                // Datetime
-                Column(modifier = Modifier.weight(1f)) {
-                    DateTimeView(currentTime)
+                Column(
+                    modifier = Modifier
+                        .weight(3f)
+                        .fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        room?.let {
+                            Text(
+                                text = it.name,
+                                modifier = Modifier,
+                                color = AppTheme.textColor,
+                                fontWeight = FontWeight.W600,
+                                fontSize = 42.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+
+                        // Datetime
+                        Column(modifier = Modifier) {
+                            DateTimeView(currentTime)
+                        }
+                    }
                 }
 
                 // Name & Status
                 Column(
-                    modifier = Modifier.weight(2f),
+                    modifier = Modifier.weight(4f),
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    NameStatusView(room, roomUse, currentMinuteOfDay)
+                    NameStatusView(roomUse, currentMinuteOfDay, hazeState, (appSettings.backgroundImage != null))
                 }
 
                 Row(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    modifier = Modifier.weight(2f).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    //Logo
-                    Box()
+                    // Logo
+                    Box(
+                        modifier = Modifier
+                            .weight(2f),
+                    )
                     {
                         ImageView(
                             image = appSettings.logo,
@@ -223,7 +260,13 @@ fun RoomScreen(
 
                     // Settings
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            8.dp,
+                            alignment = Alignment.End
+                        ),
+                        verticalAlignment = Alignment.Bottom,
                     )
                     {
                         RoundIconButton(
@@ -265,12 +308,12 @@ fun RoomScreen(
 
                 // Slots
                 Column(modifier = Modifier.fillMaxHeight().weight(1f)) {
-                    SlotView(roomUse, currentMinuteOfDay)
+                    SlotView(roomUse, currentMinuteOfDay, hazeState, (appSettings.backgroundImage != null))
                 }
 
                 if (calendarSettings.showAddEvent) {
                     SettingsButton(
-                        text = "Neuer Termin",
+                        text = stringResource(Res.string.roomview_new_event),
                         onClick = onOpenConfiguration,
                         isPrimary = true,
                         modifier = Modifier

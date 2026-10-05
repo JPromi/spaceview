@@ -1,0 +1,50 @@
+<resources>
+    <string name="roomview_booking_free">Frei</string>
+    <string name="roomview_booking_booked">Besetzt</string>
+    <string name="roomview_booking_unknown">Unbekannt</string>
+    <string name="roomview_new_event">Neuer Termin</string>
+
+    <!-- Network -->
+    <string name="network_unauthorized_text">Ungültiges Zugriffstoken</string>
+    <string name="network_forbidden_text">Keine Berechtigung für diese Anfrage</string>
+    <string name="network_not_found_text">API-Endpunkt nicht gefunden</string>
+    <string name="network_http_error_text">Serverfehler %1$d: %2$s</string>
+    <string name="network_network_error_text_fallback">Keine Verbindung zum Server</string>
+    <string name="network_invalid_request_text">Invalid request</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_provider_title">Anbieter</string>
+    <string name="settings_provider_select_label">Anbieter auswählen</string>
+    <string name="settings_provider_selected_title">%1$s-Anbieter</string>
+    <string name="settings_provider_url_label">URL</string>
+    <string name="settings_provider_server_label">Server</string>
+    <string name="settings_provider_token_label">Token</string>
+    <string name="settings_provider_test_connection_label">Testen</string>
+    <string name="settings_calendar_title">Kalender</string>
+    <string name="settings_calendar_select_room_label">Raum auswählen</string>
+    <string name="settings_calendar_new_event_button">Neue Termine erlauben</string>
+    <string name="settings_style_title">Darstellung</string>
+    <string name="settings_style_fullscreen_label">Im Vollbild starten</string>
+    <string name="settings_style_primary_color_label">Primärfarbe</string>
+    <string name="settings_style_logo_label">Logo</string>
+    <string name="settings_style_logo_select_label">Logo auswählen</string>
+    <string name="settings_style_background_label">Hintergrundbild</string>
+    <string name="settings_style_background_select_label">Hintergrundbild auswählen</string>
+    <string name="settings_admin_title">Admin-Einstellungen</string>
+    <string name="settings_admin_pin_label">Admin-PIN</string>
+    <string name="settings_admin_language_label">Sprache</string>
+    <string name="settings_language_system">Systemsprache</string>
+    <string name="settings_cancel_button">Abbrechen</string>
+    <string name="settings_save_button">Speichern</string>
+    <string name="settings_message_incorrect_hex_text">Ungültiger HEX-Wert</string>
+    <string name="settings_message_pin_length_text">Die PIN muss %1$s Ziffern lang sein</string>
+    <string name="settings_message_rooms_not_loaded_text">Fehler beim Laden der Räume.</string>
+    <string name="settings_message_http_connected_text">Verbunden</string>
+    <string name="settings_message_no_url_text">Bitte eine URL auswählen.</string>
+    <string name="settings_message_no_valid_ical_text">Die Antwort ist kein gültiger ICS-Kalender.</string>
+    <plurals name="settings_message_rooms_loaded_text">
+        <item quantity="one">%1$d Raum geladen.</item>
+        <item quantity="other">%1$d Räume geladen.</item>
+    </plurals>
+</resources>

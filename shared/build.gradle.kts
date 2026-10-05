@@ -82,6 +82,7 @@ kotlin {
             implementation(libs.coil.network.ktor3)
             implementation(libs.coil.svg)
             implementation(libs.aboutlibraries.core)
+            implementation(libs.haze)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

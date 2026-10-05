@@ -10,6 +10,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.elements.ImageView
 import com.jpromi.spaceview.screens.ConfigurationScreen
@@ -27,39 +29,55 @@ fun App() {
     var themeColor by remember { mutableStateOf(appSettings.themeColor) }
     LocalFullscreenController.current?.setFullscreen(appSettings.fullscreen);
 
-    AppTheme(themeColor = themeColor) {
-        var currentScreen by remember { mutableStateOf(Screen.Room) }
+    var language by remember { mutableStateOf(appSettings.language) }
+    AppLanguage(language) {
+        key(language) {
+            AppTheme(themeColor = themeColor) {
+                var currentScreen by remember { mutableStateOf(Screen.Room) }
+                val hazeState = rememberHazeState()
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppTheme.background),
-        ) {
-            // Background
-            if (appSettings.backgroundImage != null) {
-                ImageView(
-                    image = appSettings.backgroundImage,
+                Box(
                     modifier = Modifier
-                        .fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-            }
+                        .fillMaxSize()
+                        .background(AppTheme.background),
+                ) {
+                    // Background
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(AppTheme.background)
+                            .hazeSource(hazeState),
+                    ) {
+                        if (appSettings.backgroundImage != null) {
+                            ImageView(
+                                image = appSettings.backgroundImage,
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        }
+                    }
 
-            // App
-            when (currentScreen) {
-                Screen.Configuration -> ConfigurationScreen(
-                    onGoBack = {
-                        themeColor = appSettings.themeColor
-                        currentScreen = Screen.Room
-                    },
-                    appSettings = appSettings,
-                )
-                Screen.Room -> RoomScreen(
-                    onOpenConfiguration = { currentScreen = Screen.Configuration },
-                    appSettings = appSettings,
-                )
+                    // App
+                    when (currentScreen) {
+                        Screen.Configuration -> ConfigurationScreen(
+                            onGoBack = {
+                                language = appSettings.language
+                                themeColor = appSettings.themeColor
+                                currentScreen = Screen.Room
+                            },
+                            appSettings = appSettings,
+                            hazeState = hazeState,
+                        )
+                        Screen.Room -> RoomScreen(
+                            onOpenConfiguration = { currentScreen = Screen.Configuration },
+                            appSettings = appSettings,
+                            hazeState = hazeState,
+                        )
+                    }
+                }
+
             }
         }
-
     }
 }

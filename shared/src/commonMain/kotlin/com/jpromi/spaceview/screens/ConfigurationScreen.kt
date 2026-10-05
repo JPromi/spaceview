@@ -4,10 +4,6 @@ package com.jpromi.spaceview.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,20 +17,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -50,28 +41,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.Calendar
 import com.composables.icons.lucide.CircleCheck
 import com.composables.icons.lucide.CircleX
 import com.composables.icons.lucide.Lucide
-import com.composables.icons.lucide.Paperclip
 import com.composables.icons.lucide.Server
 import com.composables.icons.lucide.Settings
 import com.composables.icons.lucide.Shield
+import com.composables.icons.lucide.X
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.rememberHazeState
 import com.jpromi.spaceview.AppTheme
 import com.jpromi.spaceview.AppSettings
+import com.jpromi.spaceview.getPlatform
 import com.jpromi.spaceview.controllers.LocalFullscreenController
 import com.jpromi.spaceview.CalendarSettings
-import com.jpromi.spaceview.elements.Expandable
 import com.jpromi.spaceview.elements.ImageView
 import com.jpromi.spaceview.elements.SettingsImageSelectPopup
 import com.jpromi.spaceview.elements.forms.ScrollColumn
@@ -101,18 +89,50 @@ import com.jpromi.spaceview.services.impl.RoomVoxRoomService
 import com.jpromi.spaceview.util.toColor
 import com.jpromi.spaceview.util.toHexCode
 import kotlinx.coroutines.launch
-import com.mikepenz.aboutlibraries.Libs
+import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import spaceview.shared.generated.resources.Res
-import kotlin.collections.getValue
-import kotlin.collections.setValue
-import kotlin.getValue
-import kotlin.setValue
+import spaceview.shared.generated.resources.provider_demo
+import spaceview.shared.generated.resources.provider_ical
+import spaceview.shared.generated.resources.provider_roomvox
+import spaceview.shared.generated.resources.settings_admin_pin_label
+import spaceview.shared.generated.resources.settings_admin_language_label
+import spaceview.shared.generated.resources.settings_language_system
+import spaceview.shared.generated.resources.settings_admin_title
+import spaceview.shared.generated.resources.settings_calendar_new_event_button
+import spaceview.shared.generated.resources.settings_calendar_select_room_label
+import spaceview.shared.generated.resources.settings_calendar_title
+import spaceview.shared.generated.resources.settings_cancel_button
+import spaceview.shared.generated.resources.settings_message_http_connected_text
+import spaceview.shared.generated.resources.settings_message_incorrect_hex_text
+import spaceview.shared.generated.resources.settings_message_pin_length_text
+import spaceview.shared.generated.resources.settings_provider_select_label
+import spaceview.shared.generated.resources.settings_provider_selected_title
+import spaceview.shared.generated.resources.settings_provider_server_label
+import spaceview.shared.generated.resources.settings_provider_test_connection_label
+import spaceview.shared.generated.resources.settings_provider_title
+import spaceview.shared.generated.resources.settings_provider_token_label
+import spaceview.shared.generated.resources.settings_provider_url_label
+import spaceview.shared.generated.resources.settings_save_button
+import spaceview.shared.generated.resources.settings_style_background_label
+import spaceview.shared.generated.resources.settings_style_background_select_label
+import spaceview.shared.generated.resources.settings_style_fullscreen_label
+import spaceview.shared.generated.resources.settings_style_logo_label
+import spaceview.shared.generated.resources.settings_style_logo_select_label
+import spaceview.shared.generated.resources.settings_style_primary_color_label
+import spaceview.shared.generated.resources.settings_style_title
+import spaceview.shared.generated.resources.settings_title
+import spaceview.shared.generated.resources.settings_message_rooms_loaded_text
+import spaceview.shared.generated.resources.settings_message_rooms_not_loaded_text
 
 @Composable
 fun ConfigurationScreen(
     onGoBack: () -> Unit,
     appSettings: AppSettings = remember { AppSettings() },
     calendarSettings: CalendarSettings = remember { CalendarSettings() },
+    hazeState: HazeState = rememberHazeState(),
 ) {
     var roomService by remember { mutableStateOf<RoomService>(DemoRoomService()) }
     var themingService by remember { mutableStateOf<ThemingService?>(null) }
@@ -157,7 +177,7 @@ fun ConfigurationScreen(
         regex = Regex("""^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"""),
         maxLength = 7,
         allowEmpty = false,
-        errorMessage = "Ungültige HEX-Farbe"
+        errorMessage = stringResource(Res.string.settings_message_incorrect_hex_text)
     )
     val defaultThemeColor: List<Color> = listOf(
         Color(0xFF11BD65),
@@ -170,14 +190,19 @@ fun ConfigurationScreen(
     var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
 
     // Admin
+    var selectedLanguage by remember { mutableStateOf(appSettings.language) }
     var adminPinActive by remember { mutableStateOf(appSettings.adminPin.isNotEmpty()) }
     var adminPin by remember { mutableStateOf(appSettings.adminPin) }
+    val pinLengthErrorMessage = stringResource(
+        Res.string.settings_message_pin_length_text,
+        "4"
+    )
     val adminPinRules = remember {
         TextInputRules(
             regex = Regex("\\d{4}"),
             maxLength = 4,
             allowEmpty = false,
-            errorMessage = "PIN muss 4 Ziffern lang sein",
+            errorMessage = pinLengthErrorMessage,
         )
     }
 
@@ -192,6 +217,11 @@ fun ConfigurationScreen(
     var isLoadingRooms by remember { mutableStateOf(false) }
     var loadRoomsMessage by remember { mutableStateOf<String?>(null) }
     var themeColor by remember { mutableStateOf<Color?>(null) }
+    val withBlur = appSettings.backgroundImage != null
+    val showFullscreenSetting = remember {
+        val platformName = getPlatform().name
+        listOf("JVM", "Web").contains(platformName)
+    }
 
     fun selectCalendarProvider(provider: CalendarProviderENUM) {
         selectedProvider = provider
@@ -229,12 +259,16 @@ fun ConfigurationScreen(
                     if (loadedRooms.none { it.id == selectedRoomId }) {
                         selectedRoomId = loadedRooms.firstOrNull()?.id.orEmpty()
                     }
-                    loadRoomsMessage = "${loadedRooms.size} Räume geladen"
+                    loadRoomsMessage = getPluralString(
+                    Res.plurals.settings_message_rooms_loaded_text,
+                        loadedRooms.size,
+                        loadedRooms.size
+                    )
                 }
 
                 else -> {
                     loadedRooms = emptyList()
-                    loadRoomsMessage = "Räume konnten nicht geladen werden"
+                    loadRoomsMessage = getString(Res.string.settings_message_rooms_not_loaded_text)
                 }
             }
 
@@ -328,7 +362,7 @@ fun ConfigurationScreen(
                             loadTheme()
                         }
 
-                        "Verbunden"
+                        getString(Res.string.settings_message_http_connected_text)
                     }
 
                     is ApiResult.Error -> result.toUserMessage()
@@ -380,6 +414,7 @@ fun ConfigurationScreen(
         // UI / Theme
         calendarSettings.showAddEvent = showAddEvent;
 
+        appSettings.language = selectedLanguage
         appSettings.themeColor = selectedThemeColor
         appSettings.logo = selectedThemeLogo
         appSettings.backgroundImage = selectedThemeBackgroundImage
@@ -452,7 +487,7 @@ fun ConfigurationScreen(
         Column {
             // Title
             Text(
-                text = "Einstellungen",
+                text = stringResource(Res.string.settings_title),
                 modifier = Modifier
                     .padding(start = 16.dp, top = 16.dp),
                 color = AppTheme.textColor.copy(alpha = .75f),
@@ -470,7 +505,7 @@ fun ConfigurationScreen(
             ) {
                 item {
                     SettingsNavigationButton(
-                        text = "Provider",
+                        text = stringResource(Res.string.settings_provider_title),
                         icon = Lucide.Server,
                         isActive = activeSectionIndex == providerSectionIndex,
                         onClick = { scrollToSection(providerSectionIndex) },
@@ -478,7 +513,7 @@ fun ConfigurationScreen(
                 }
                 item {
                     SettingsNavigationButton(
-                        text = "Kalender",
+                        text = stringResource(Res.string.settings_calendar_title),
                         icon = Lucide.Calendar,
                         isActive = activeSectionIndex == calendarSectionIndex,
                         onClick = { scrollToSection(calendarSectionIndex) },
@@ -486,7 +521,7 @@ fun ConfigurationScreen(
                 }
                 item {
                     SettingsNavigationButton(
-                        text = "Applikation",
+                        text = stringResource(Res.string.settings_style_title),
                         icon = Lucide.Settings,
                         isActive = activeSectionIndex == applicationSectionIndex,
                         onClick = { scrollToSection(applicationSectionIndex) },
@@ -494,7 +529,7 @@ fun ConfigurationScreen(
                 }
                 item {
                     SettingsNavigationButton(
-                        text = "Admin",
+                        text = stringResource(Res.string.settings_admin_title),
                         icon = Lucide.Shield,
                         isActive = activeSectionIndex == adminSectionIndex,
                         onClick = { scrollToSection(adminSectionIndex) },
@@ -520,26 +555,28 @@ fun ConfigurationScreen(
             // Provider
             item {
                 SettingsSection(
-                    title = "Provider"
+                    title = stringResource(Res.string.settings_provider_title),
+                    hazeState = hazeState,
+                    withBlur = withBlur,
                 ) {
 
                     val providers: List<CalendarProvider> = listOf(
                         CalendarProvider(
                             id = CalendarProviderENUM.DEMO,
-                            name = "Demo"
+                            name = stringResource(Res.string.provider_demo)
                         ),
                         CalendarProvider(
                             id = CalendarProviderENUM.ROOMVOX,
-                            name = "RoomVox"
+                            name = stringResource(Res.string.provider_roomvox)
                         ),
                         CalendarProvider(
                             id = CalendarProviderENUM.ICS,
-                            name = "iCal"
+                            name = stringResource(Res.string.provider_ical)
                         )
                     )
 
                     SettingsDropdown(
-                        label = "Provider auswaehlen",
+                        label = stringResource(Res.string.settings_provider_select_label),
                         options = providers,
                         selectedOption = providers.find { it.id == selectedProvider },
                         optionText = { it.name },
@@ -558,12 +595,17 @@ fun ConfigurationScreen(
                     when (selectedProvider) {
                         CalendarProviderENUM.ROOMVOX -> {
                             SettingsSection(
-                                title = "RoomVox Provider",
-                                transparentBackground = true
+                                title = stringResource(
+                                    Res.string.settings_provider_selected_title,
+                                    stringResource(Res.string.provider_roomvox)
+                                ),
+                                transparentBackground = true,
+                                hazeState = hazeState,
+                                withBlur = withBlur,
                             ) {
 
                                 SettingsTextInput(
-                                    label = "Server",
+                                    label = stringResource(Res.string.settings_provider_server_label),
                                     value = selectedRoomVoxServerUrl,
                                     onValueChange = {
                                         selectedRoomVoxServerUrl = it
@@ -577,7 +619,7 @@ fun ConfigurationScreen(
                                 )
 
                                 SettingsTextInput(
-                                    label = "Token",
+                                    label = stringResource(Res.string.settings_provider_token_label),
                                     value = selectedRoomVoxToken,
                                     onValueChange = {
                                         selectedRoomVoxToken = it
@@ -631,11 +673,7 @@ fun ConfigurationScreen(
                                     }
 
                                     SettingsButton(
-                                        text = if (isCheckingConnection) {
-                                            "Prüfe..."
-                                        } else {
-                                            "Prüfen"
-                                        },
+                                        text = stringResource(Res.string.settings_provider_test_connection_label),
                                         enabled = !isCheckingConnection,
                                         onClick = { checkConnection() },
                                         modifier = Modifier.width(200.dp),
@@ -646,11 +684,16 @@ fun ConfigurationScreen(
 
                         CalendarProviderENUM.ICS -> {
                             SettingsSection(
-                                title = "iCal Provider",
-                                transparentBackground = true
+                                title = stringResource(
+                                    Res.string.settings_provider_selected_title,
+                                    stringResource(Res.string.provider_ical)
+                                ),
+                                transparentBackground = true,
+                                hazeState = hazeState,
+                                withBlur = withBlur,
                             ) {
                                 SettingsTextInput(
-                                    label = "URL",
+                                    label = stringResource(Res.string.settings_provider_url_label),
                                     value = selectedIcsUrl,
                                     onValueChange = {
                                         selectedIcsUrl = it
@@ -703,11 +746,7 @@ fun ConfigurationScreen(
                                     }
 
                                     SettingsButton(
-                                        text = if (isCheckingConnection) {
-                                            "Prüfe..."
-                                        } else {
-                                            "Prüfen"
-                                        },
+                                        text = stringResource(Res.string.settings_provider_test_connection_label),
                                         enabled = !isCheckingConnection,
                                         onClick = { checkConnection() },
                                         modifier = Modifier.width(200.dp),
@@ -724,11 +763,13 @@ fun ConfigurationScreen(
             // Calendar
             item {
                 SettingsSection(
-                    title = "Kalender"
+                    title = stringResource(Res.string.settings_calendar_title),
+                    hazeState = hazeState,
+                    withBlur = withBlur,
                 ) {
                     if (selectedProvider == CalendarProviderENUM.ROOMVOX || selectedProvider == CalendarProviderENUM.DEMO) {
                         SettingsDropdown(
-                            label = "Raum auswählen",
+                            label = stringResource(Res.string.settings_calendar_select_room_label),
                             options = loadedRooms,
                             selectedOption = loadedRooms.find { it.id == selectedRoomId }
                                 ?: loadedRooms.firstOrNull(),
@@ -744,7 +785,7 @@ fun ConfigurationScreen(
                         onCheckedChange = {
                             showAddEvent = it
                         },
-                        text = "Show Add Button",
+                        text = stringResource(Res.string.settings_calendar_new_event_button),
                     )
 
                     // allow edit
@@ -753,20 +794,27 @@ fun ConfigurationScreen(
 
             // Application
             item {
-                SettingsSection(title = "Applikation") {
-                    SettingsSwitch(
-                        checked = fullscreen,
-                        onCheckedChange = {
-                            fullscreen = it
-                        },
-                        text = "Fullscreen",
-                    )
+                SettingsSection(
+                    title = stringResource(Res.string.settings_style_title),
+                    hazeState = hazeState,
+                    withBlur = withBlur,
+                ) {
+                    if (showFullscreenSetting) {
+                        // ToDo: Only for JVM and maybe Web, not for Android and iOS
+                        SettingsSwitch(
+                            checked = fullscreen,
+                            onCheckedChange = {
+                                fullscreen = it
+                            },
+                            text = stringResource(Res.string.settings_style_fullscreen_label),
+                        )
+                    }
 
                     // Theme color selector
                     Column {
                         // Title
                         Text(
-                            text = "Primär Farbe",
+                            text = stringResource(Res.string.settings_style_primary_color_label),
                             color = AppTheme.textColor,
                         )
 
@@ -828,16 +876,16 @@ fun ConfigurationScreen(
                     Column {
                         // Title
                         Text(
-                            text = "Logo",
+                            text = stringResource(Res.string.settings_style_logo_label),
                             color = AppTheme.textColor,
                         )
 
-                        Column(
+                        Box(
                             modifier = Modifier
                                 .size(150.dp)
                                 .clip(RoundedCornerShape(4.dp))
                                 .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
-                                .background(AppTheme.background)
+                                .background(AppTheme.formBackground)
                                 .clickable {
                                     logoSelectPopup.open()
                                 }
@@ -849,12 +897,35 @@ fun ConfigurationScreen(
                                         .padding(8.dp)
                                         .fillMaxSize(),
                                 )
+
+                                IconButton(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .align(Alignment.TopEnd)
+                                        .padding(6.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = AppTheme.textColorRed,
+                                        contentColor = AppTheme.textColor
+                                    ),
+                                    onClick = {
+                                        selectedThemeLogo = null
+                                    },
+                                    content = {
+                                        Icon(
+                                            imageVector = Lucide.X,
+                                            contentDescription = null,
+                                            tint = AppTheme.textColor,
+                                            modifier = Modifier
+                                                .fillMaxSize(.8f),
+                                        )
+                                    }
+                                )
                             }
                         }
 
                         SettingsImageSelectPopup(
                             state = logoSelectPopup,
-                            title = "Logo auswählen",
+                            title = stringResource(Res.string.settings_style_logo_select_label),
                             images = (listOfNotNull(themeLogo) + themeImages).distinctBy { it.path },
                             onSelect = { logo ->
                                 selectedThemeLogo = logo
@@ -867,17 +938,17 @@ fun ConfigurationScreen(
                     Column {
                         // Title
                         Text(
-                            text = "Hintergrundbild",
+                            text = stringResource(Res.string.settings_style_background_label),
                             color = AppTheme.textColor,
                         )
 
-                        Column(
+                        Box(
                             modifier = Modifier
                                 .height(150.dp)
                                 .width(250.dp)
                                 .clip(RoundedCornerShape(4.dp))
                                 .border(1.dp, AppTheme.borderSettings, RoundedCornerShape(4.dp))
-                                .background(AppTheme.background)
+                                .background(AppTheme.formBackground)
                                 .clickable {
                                     backgroundImageSelectPopup.open()
                                 }
@@ -889,12 +960,35 @@ fun ConfigurationScreen(
                                         .fillMaxSize(),
                                     contentScale = ContentScale.Crop,
                                 )
+
+                                IconButton(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .align(Alignment.TopEnd)
+                                        .padding(6.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = AppTheme.textColorRed,
+                                        contentColor = AppTheme.textColor
+                                    ),
+                                    onClick = {
+                                        selectedThemeBackgroundImage = null
+                                    },
+                                    content = {
+                                        Icon(
+                                            imageVector = Lucide.X,
+                                            contentDescription = null,
+                                            tint = AppTheme.textColor,
+                                            modifier = Modifier
+                                                .fillMaxSize(.8f),
+                                        )
+                                    }
+                                )
                             }
                         }
 
                         SettingsImageSelectPopup(
                             state = backgroundImageSelectPopup,
-                            title = "Hintergrundbild auswählen",
+                            title = stringResource(Res.string.settings_style_background_select_label),
                             images = (listOfNotNull(themeBackgroundImage) + themeImages).distinctBy { it.path },
                             onSelect = { backgroundImage ->
                                 selectedThemeBackgroundImage = backgroundImage
@@ -908,18 +1002,36 @@ fun ConfigurationScreen(
             // Admin
             item {
 
-                SettingsSection(title = "Admin") {
+                SettingsSection(
+                    title = stringResource(Res.string.settings_admin_title),
+                    hazeState = hazeState,
+                    withBlur = withBlur,
+                ) {
+                    val systemLanguageLabel = stringResource(Res.string.settings_language_system)
+                    SettingsDropdown(
+                        label = stringResource(Res.string.settings_admin_language_label),
+                        options = listOf("", "de", "en"),
+                        selectedOption = selectedLanguage,
+                        optionText = { language ->
+                            when (language) {
+                                "de" -> "Deutsch"
+                                "en" -> "English"
+                                else -> systemLanguageLabel
+                            }
+                        },
+                        onOptionSelected = { selectedLanguage = it },
+                    )
                     SettingsSwitch(
                         checked = adminPinActive,
                         onCheckedChange = {
                             adminPinActive = it
                         },
-                        text = "Admin PIN",
+                        text = stringResource(Res.string.settings_admin_pin_label),
                     )
 
                     if (adminPinActive) {
                         SettingsTextInput(
-                            label = "Admin PIN",
+                            label = stringResource(Res.string.settings_admin_pin_label),
                             value = adminPin,
                             onValueChange = {
                                 adminPin = it.filter(Char::isDigit).take(4)
@@ -940,13 +1052,13 @@ fun ConfigurationScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End),
                 ) {
                     SettingsButton(
-                        text = "Abbrechen",
+                        text = stringResource(Res.string.settings_cancel_button),
                         onClick = { onGoBack() },
                         modifier = Modifier.width(200.dp),
                     )
 
                     SettingsButton(
-                        text = "Speichern",
+                        text = stringResource(Res.string.settings_save_button),
                         isPrimary = true,
                         enabled = remoteServerConnection && (!adminPinActive || adminPinRules.isValid(adminPin)),
                         onClick = { save() },
