@@ -1,0 +1,14 @@
+<resources>
+    <string name="roomview_booking_free">Frei</string>
+    <string name="roomview_booking_booked">Besetzt</string>
+    <string name="roomview_booking_unknown">Unbekannt</string>
+    <string name="roomview_new_event">Neuer Termin</string>
+
+    <!-- Network -->
+    <string name="network_unauthorized_text">Ungültiges Zugriffstoken</string>
+    <string name="network_forbidden_text">Keine Berechtigung für diese Anfrage</string>
+    <string name="network_not_found_text">API-Endpunkt nicht gefunden</string>
+    <string name="network_http_error_text">Serverfehler %1$d: %2$s</string>
+    <string name="network_network_error_text_fallback">Keine Verbindung zum Server</string>
+    <string name="network_invalid_request_text">Invalid request</string>
+</resources>

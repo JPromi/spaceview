@@ -29,6 +29,11 @@ import com.jpromi.spaceview.enums.SlotStatus
 import com.jpromi.spaceview.models.RoomUse
 import com.jpromi.spaceview.util.toMinuteOfDay
 import com.jpromi.spaceview.util.toTimeText
+import org.jetbrains.compose.resources.stringResource
+import spaceview.shared.generated.resources.Res
+import spaceview.shared.generated.resources.roomview_booking_booked
+import spaceview.shared.generated.resources.roomview_booking_free
+import spaceview.shared.generated.resources.roomview_new_event
 import kotlin.collections.filter
 import kotlin.collections.forEachIndexed
 import kotlin.collections.map
@@ -111,7 +116,11 @@ fun SlotView(roomUse: RoomUse?, currentMinuteOfDay: Int, hazeState: HazeState, w
                                     .padding(vertical = 2.dp, horizontal = 6.dp)
                             ) {
                                 Text(
-                                    text = slot.status.toString(),
+                                    text = if(slot.status == SlotStatus.BOOKED) {
+                                        stringResource(Res.string.roomview_booking_booked)
+                                    } else {
+                                        stringResource(Res.string.roomview_booking_free)
+                                    },
                                     color = if (slot.status == SlotStatus.BOOKED) {
                                         AppTheme.busyTabTextColor
                                     } else {
@@ -131,9 +140,9 @@ fun SlotView(roomUse: RoomUse?, currentMinuteOfDay: Int, hazeState: HazeState, w
                         // Title
                         Text(
                             text = if (slot.status == SlotStatus.BOOKED) {
-                                slot.event?.title ?: "Belegt"
+                                slot.event?.title ?: stringResource(Res.string.roomview_booking_booked)
                             } else {
-                                "Frei"
+                                ""
                             },
                             color = AppTheme.textColor,
                         )

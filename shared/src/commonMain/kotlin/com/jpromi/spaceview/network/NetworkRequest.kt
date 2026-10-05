@@ -4,6 +4,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.CancellationException
+import org.jetbrains.compose.resources.getString
+import spaceview.shared.generated.resources.Res
+import spaceview.shared.generated.resources.network_invalid_request_text
 
 suspend fun <T> executeRequest(
     invalidRequestMessage: String? = null,
@@ -13,7 +16,7 @@ suspend fun <T> executeRequest(
     request: suspend (HttpClient) -> T,
 ): ApiResult<T> {
     if (!isRequestValid()) {
-        return ApiResult.InvalidRequest(invalidRequestMessage ?: "Ungueltige Anfrage.")
+        return ApiResult.InvalidRequest(invalidRequestMessage ?: getString(Res.string.network_invalid_request_text))
     }
 
     val client = HttpClientFactory.create(

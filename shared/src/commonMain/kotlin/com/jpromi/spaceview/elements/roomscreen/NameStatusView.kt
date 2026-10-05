@@ -29,6 +29,11 @@ import com.jpromi.spaceview.models.Room
 import com.jpromi.spaceview.models.RoomUse
 import com.jpromi.spaceview.util.toMinuteOfDay
 import com.jpromi.spaceview.util.toTimeText
+import org.jetbrains.compose.resources.stringResource
+import spaceview.shared.generated.resources.Res
+import spaceview.shared.generated.resources.roomview_booking_booked
+import spaceview.shared.generated.resources.roomview_booking_free
+import spaceview.shared.generated.resources.roomview_booking_unknown
 
 @Composable
 fun NameStatusView(roomUse: RoomUse?, currentMinuteOfDay: Int, hazeState: HazeState, withBlurEffect: Boolean = false) {
@@ -73,9 +78,9 @@ fun NameStatusView(roomUse: RoomUse?, currentMinuteOfDay: Int, hazeState: HazeSt
         ) {
             Text(
                 text = when {
-                    roomUse == null || roomUse.slots.isEmpty() -> "Unbekannt"
-                    roomUse.currentEvent != null -> "Belegt"
-                    else -> "Frei"
+                    roomUse == null || roomUse.slots.isEmpty() -> stringResource(Res.string.roomview_booking_unknown)
+                    roomUse.currentEvent != null -> stringResource(Res.string.roomview_booking_booked)
+                    else -> stringResource(Res.string.roomview_booking_free)
                 },
                 color = AppTheme.textColor,
                 fontWeight = FontWeight.W700,

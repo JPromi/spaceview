@@ -18,6 +18,9 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.getString
+import spaceview.shared.generated.resources.Res
+import spaceview.shared.generated.resources.settings_message_no_valid_ical_text
 import kotlin.time.Clock
 
 class IcsRoomService(
@@ -42,8 +45,12 @@ class IcsRoomService(
     override suspend fun checkCredentials(): ApiResult<String> = executeIcsRequest { client ->
         val ics = client.get(baseUrl).body<String>()
 
+        val errorMessage = getString(
+            Res.string.settings_message_no_valid_ical_text
+        )
+
         require(ics.contains("BEGIN:VCALENDAR")) {
-            "Response is not a valid ICS calendar"
+            errorMessage
         }
 
         ics

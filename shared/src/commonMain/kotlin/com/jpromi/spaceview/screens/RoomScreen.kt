@@ -94,6 +94,8 @@ import com.jpromi.spaceview.util.toTimeText
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import spaceview.shared.generated.resources.Res
+import spaceview.shared.generated.resources.roomview_new_event
 
 @Composable
 fun RoomScreen(
@@ -311,7 +313,7 @@ fun RoomScreen(
 
                 if (calendarSettings.showAddEvent) {
                     SettingsButton(
-                        text = "Neuer Termin",
+                        text = stringResource(Res.string.roomview_new_event),
                         onClick = onOpenConfiguration,
                         isPrimary = true,
                         modifier = Modifier
