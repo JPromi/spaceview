@@ -98,6 +98,8 @@ import spaceview.shared.generated.resources.provider_demo
 import spaceview.shared.generated.resources.provider_ical
 import spaceview.shared.generated.resources.provider_roomvox
 import spaceview.shared.generated.resources.settings_admin_pin_label
+import spaceview.shared.generated.resources.settings_admin_language_label
+import spaceview.shared.generated.resources.settings_language_system
 import spaceview.shared.generated.resources.settings_admin_title
 import spaceview.shared.generated.resources.settings_calendar_new_event_button
 import spaceview.shared.generated.resources.settings_calendar_select_room_label
@@ -188,6 +190,7 @@ fun ConfigurationScreen(
     var fullscreen by remember { mutableStateOf(appSettings.fullscreen) }
 
     // Admin
+    var selectedLanguage by remember { mutableStateOf(appSettings.language) }
     var adminPinActive by remember { mutableStateOf(appSettings.adminPin.isNotEmpty()) }
     var adminPin by remember { mutableStateOf(appSettings.adminPin) }
     val pinLengthErrorMessage = stringResource(
@@ -411,6 +414,7 @@ fun ConfigurationScreen(
         // UI / Theme
         calendarSettings.showAddEvent = showAddEvent;
 
+        appSettings.language = selectedLanguage
         appSettings.themeColor = selectedThemeColor
         appSettings.logo = selectedThemeLogo
         appSettings.backgroundImage = selectedThemeBackgroundImage
@@ -1003,6 +1007,20 @@ fun ConfigurationScreen(
                     hazeState = hazeState,
                     withBlur = withBlur,
                 ) {
+                    val systemLanguageLabel = stringResource(Res.string.settings_language_system)
+                    SettingsDropdown(
+                        label = stringResource(Res.string.settings_admin_language_label),
+                        options = listOf("", "de", "en"),
+                        selectedOption = selectedLanguage,
+                        optionText = { language ->
+                            when (language) {
+                                "de" -> "Deutsch"
+                                "en" -> "English"
+                                else -> systemLanguageLabel
+                            }
+                        },
+                        onOptionSelected = { selectedLanguage = it },
+                    )
                     SettingsSwitch(
                         checked = adminPinActive,
                         onCheckedChange = {

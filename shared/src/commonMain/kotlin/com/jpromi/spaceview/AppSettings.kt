@@ -15,6 +15,14 @@ class AppSettings(
         ignoreUnknownKeys = true
     }
 
+    // Empty means follow the system language.
+    var language: String
+        get() = settings.getString(KEY_LANGUAGE, "").takeIf { it in listOf("en", "de") } ?: ""
+        set(value) {
+            if (value in listOf("en", "de")) settings.putString(KEY_LANGUAGE, value)
+            else settings.remove(KEY_LANGUAGE)
+        }
+
     var adminPin: String
         get() = settings.getString(KEY_ADMIN_PIN, "")
         set(value) {
@@ -77,6 +85,7 @@ class AppSettings(
 
 
     private companion object {
+        const val KEY_LANGUAGE = "language"
         const val KEY_ADMIN_PIN = "admin_pin"
         const val KEY_FULLSCREEN = "selected_fullscreen"
         const val KEY_THEME_COLOR = "theme_color"

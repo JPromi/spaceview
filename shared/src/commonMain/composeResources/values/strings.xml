@@ -34,6 +34,8 @@
     <string name="settings_style_background_select_label">Select Background Image</string>
 
     <string name="settings_admin_title">Admin settings</string>
+    <string name="settings_admin_language_label">Language</string>
+    <string name="settings_language_system">System language</string>
     <string name="settings_admin_pin_label">Admin PIN</string>
 
     <string name="settings_cancel_button">Cancel</string>

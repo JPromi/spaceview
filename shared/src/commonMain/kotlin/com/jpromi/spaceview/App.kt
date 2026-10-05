@@ -29,49 +29,55 @@ fun App() {
     var themeColor by remember { mutableStateOf(appSettings.themeColor) }
     LocalFullscreenController.current?.setFullscreen(appSettings.fullscreen);
 
-    AppTheme(themeColor = themeColor) {
-        var currentScreen by remember { mutableStateOf(Screen.Room) }
-        val hazeState = rememberHazeState()
+    var language by remember { mutableStateOf(appSettings.language) }
+    AppLanguage(language) {
+        key(language) {
+            AppTheme(themeColor = themeColor) {
+                var currentScreen by remember { mutableStateOf(Screen.Room) }
+                val hazeState = rememberHazeState()
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppTheme.background),
-        ) {
-            // Background
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(AppTheme.background)
-                    .hazeSource(hazeState),
-            ) {
-                if (appSettings.backgroundImage != null) {
-                    ImageView(
-                        image = appSettings.backgroundImage,
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(AppTheme.background),
+                ) {
+                    // Background
+                    Box(
                         modifier = Modifier
-                            .fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
-            }
+                            .fillMaxSize()
+                            .background(AppTheme.background)
+                            .hazeSource(hazeState),
+                    ) {
+                        if (appSettings.backgroundImage != null) {
+                            ImageView(
+                                image = appSettings.backgroundImage,
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        }
+                    }
 
-            // App
-            when (currentScreen) {
-                Screen.Configuration -> ConfigurationScreen(
-                    onGoBack = {
-                        themeColor = appSettings.themeColor
-                        currentScreen = Screen.Room
-                    },
-                    appSettings = appSettings,
-                    hazeState = hazeState,
-                )
-                Screen.Room -> RoomScreen(
-                    onOpenConfiguration = { currentScreen = Screen.Configuration },
-                    appSettings = appSettings,
-                    hazeState = hazeState,
-                )
+                    // App
+                    when (currentScreen) {
+                        Screen.Configuration -> ConfigurationScreen(
+                            onGoBack = {
+                                language = appSettings.language
+                                themeColor = appSettings.themeColor
+                                currentScreen = Screen.Room
+                            },
+                            appSettings = appSettings,
+                            hazeState = hazeState,
+                        )
+                        Screen.Room -> RoomScreen(
+                            onOpenConfiguration = { currentScreen = Screen.Configuration },
+                            appSettings = appSettings,
+                            hazeState = hazeState,
+                        )
+                    }
+                }
+
             }
         }
-
     }
 }
