@@ -31,7 +31,7 @@
     <string name="settings_style_logo_select_label">Logo auswählen</string>
     <string name="settings_style_background_label">Hintergrundbild</string>
     <string name="settings_style_background_select_label">Hintergrundbild auswählen</string>
-    <string name="settings_admin_title">Admin-Einstellungen</string>
+    <string name="settings_admin_title">Admin</string>
     <string name="settings_admin_pin_label">Admin-PIN</string>
     <string name="settings_admin_language_label">Sprache</string>
     <string name="settings_language_system">Systemsprache</string>
